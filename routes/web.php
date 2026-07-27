@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RazorpayWebhookController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
@@ -25,6 +26,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
     Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{cartItem}', [CartController::class, 'remove'])->name('cart.remove');
+
+    Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout/{orderId}/confirmation', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
 });
 
 Route::post('/webhooks/razorpay', [RazorpayWebhookController::class, 'handle']);

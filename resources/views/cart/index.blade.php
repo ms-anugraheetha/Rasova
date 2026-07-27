@@ -39,7 +39,7 @@
         @if ($items->isNotEmpty())
             <div class="mt-6 flex justify-between items-center border-t pt-4">
                 <p class="text-xl font-bold">Subtotal: ₹{{ number_format($subtotal / 100, 2) }}</p>
-                <a href="#" class="bg-gray-800 text-white px-6 py-2 rounded">Checkout</a>
+                <a href="{{ route('checkout.show') }}" class="bg-gray-800 text-white px-6 py-2 rounded">Checkout</a>
             </div>
         @endif
     </div>
