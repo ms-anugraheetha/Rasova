@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\OversellException;
+
 use App\Models\Address;
 use App\Models\Cart;
 use App\Services\CheckoutService;
@@ -54,9 +54,7 @@ class CheckoutController extends Controller
 
         try {
             $order = $checkoutService->checkout($request->user(), $address);
-        } catch (OversellException $e) {
-            return back()->with('error', 'Sorry, one of the items in your cart just sold out. Please review your cart.');
-        } catch (\RuntimeException $e) {
+        }  catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         }
 

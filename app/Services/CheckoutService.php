@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Exceptions\OversellException;
 use App\Models\Address;
 use App\Models\Cart;
 use App\Models\Order;
@@ -27,15 +26,7 @@ class CheckoutService
             throw new \RuntimeException('Cart is empty.');
         }
 
-        // Read-only availability check — reassures the customer stock exists right now.
-        // This is NOT a lock/reservation; stock can still be taken by someone else
-        // before payment completes. The webhook re-checks with a real lock.
-        foreach ($items as $cartItem) {
-            $variant = $cartItem->productVariant;
-            if ($variant->stock_quantity < $cartItem->quantity) {
-                throw new OversellException($variant->id, $cartItem->quantity, $variant->stock_quantity);
-            }
-        }
+        
 
         $subtotal = $items->sum(fn ($i) => $i->productVariant->price_minor * $i->quantity);
         $shippingFee = 0; // TODO: plug in ShippingRule lookup here later

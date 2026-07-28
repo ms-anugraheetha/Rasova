@@ -1,7 +1,7 @@
 <x-admin-layout>
     <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
 
-    <div class="grid grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-3 gap-4 mb-8">
         <div class="bg-white rounded-lg p-4 shadow-sm">
             <p class="text-sm text-gray-500">Total Orders</p>
             <p class="text-2xl font-bold">{{ $totalOrders }}</p>
@@ -14,10 +14,7 @@
             <p class="text-sm text-gray-500">Revenue (Paid)</p>
             <p class="text-2xl font-bold">₹{{ number_format($totalRevenue / 100, 2) }}</p>
         </div>
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-            <p class="text-sm text-gray-500">Low Stock Items</p>
-            <p class="text-2xl font-bold {{ $lowStockCount > 0 ? 'text-red-600' : '' }}">{{ $lowStockCount }}</p>
-        </div>
+        
     </div>
 
     <div class="bg-white rounded-lg p-6 shadow-sm mb-8">

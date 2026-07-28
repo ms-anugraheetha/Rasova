@@ -25,9 +25,7 @@
                         <div class="border rounded p-3 flex justify-between items-center">
                             <div>
                                 <span class="font-medium">{{ $variant->weight }}</span>
-                                <span class="text-sm text-gray-500 ml-2">
-                                    ({{ $variant->stock_quantity > 0 ? 'In stock' : 'Out of stock' }})
-                                </span>
+                                
                             </div>
                             <div class="flex items-center gap-4">
                                 <span class="font-bold">₹{{ number_format($variant->price_minor / 100, 2) }}</span>
@@ -36,8 +34,7 @@
                                         @csrf
                                         <input type="hidden" name="product_variant_id" value="{{ $variant->id }}">
                                         <input type="hidden" name="quantity" value="1">
-                                        <button type="submit" class="bg-gray-800 text-white px-4 py-1 rounded text-sm"
-                                                @disabled($variant->stock_quantity <= 0)>
+                                        <button type="submit" class="bg-gray-800 text-white px-4 py-1 rounded text-sm">
                                             Add to Cart
                                         </button>
                                     </form>

@@ -28,9 +28,7 @@ class CartController extends Controller
 
         $variant = ProductVariant::findOrFail($validated['product_variant_id']);
 
-        if ($variant->stock_quantity < $validated['quantity']) {
-            return back()->with('error', 'Not enough stock available for that quantity.');
-        }
+
 
         $cart = Cart::firstOrCreate(['user_id' => $request->user()->id]);
 
@@ -38,9 +36,7 @@ class CartController extends Controller
 
         if ($existingItem) {
             $newQuantity = $existingItem->quantity + $validated['quantity'];
-            if ($variant->stock_quantity < $newQuantity) {
-                return back()->with('error', 'Not enough stock to add that many.');
-            }
+            
             $existingItem->update(['quantity' => $newQuantity]);
         } else {
             CartItem::create([
@@ -61,9 +57,7 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        if ($cartItem->productVariant->stock_quantity < $validated['quantity']) {
-            return back()->with('error', 'Not enough stock available.');
-        }
+        
 
         $cartItem->update(['quantity' => $validated['quantity']]);
 
