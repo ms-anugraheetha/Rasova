@@ -78,17 +78,24 @@ class CheckoutService
                 ]);
             }
 
-            // TODO: replace with real Razorpay order creation via SDK once keys are configured
-            $gatewayOrderId = 'order_stub_' . uniqid();
+            $razorpay = new \Razorpay\Api\Api(
+                config('services.razorpay.key_id'),
+                 config('services.razorpay.key_secret')
+                 );
+                 $razorpayOrder = $razorpay->order->create([
+                    'receipt' => $order->order_number,
+                    'amount' => $total, // Razorpay expects amount in the smallest currency unit (paise) — matches our price_minor convention
+                    'currency' => 'INR',
+                    ]);
+                    Payment::create([
+                        'order_id' => $order->id,
+                        'payment_method' => $paymentMethod,
+                        'gateway' => 'razorpay',
+                        'gateway_order_id' => $razorpayOrder['id'],
+                        'amount_minor' => $total,
+                        'status' => 'pending',
+                        ]);
 
-            Payment::create([
-                'order_id' => $order->id,
-                'payment_method' => $paymentMethod,
-                'gateway' => 'razorpay',
-                'gateway_order_id' => $gatewayOrderId,
-                'amount_minor' => $total,
-                'status' => 'pending',
-            ]);
 
             // Cart is cleared once the order is placed, regardless of payment outcome —
             // if payment fails, the order itself is marked failed; items aren't re-added to cart automatically.

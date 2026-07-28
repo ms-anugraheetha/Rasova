@@ -60,8 +60,17 @@ class CheckoutController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('checkout.confirmation', $order->id)
-            ->with('success', 'Order placed successfully!');
+        return redirect()->route('checkout.payment', $order->id);
+    }
+
+    public function payment(Request $request, int $orderId)
+    {
+        $order = $request->user()->orders()->with('payment')->findOrFail($orderId);
+
+        return view('checkout.payment', [
+            'order' => $order,
+            'razorpayKeyId' => config('services.razorpay.key_id'),
+        ]);
     }
 
     public function confirmation(Request $request, int $orderId)
