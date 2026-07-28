@@ -13,7 +13,7 @@
             <div class="p-4 font-bold text-lg border-b border-gray-700">Rasova Admin</div>
             <nav class="p-4 space-y-2">
                 <a href="{{ route('admin.dashboard') }}" class="block py-2 px-3 rounded hover:bg-gray-800 {{ request()->routeIs('admin.dashboard') ? 'bg-gray-800' : '' }}">Dashboard</a>
-                <a href="#" class="block py-2 px-3 rounded hover:bg-gray-800 text-gray-500">Orders (soon)</a>
+                <a href="{{ route('admin.orders.index') }}" class="block py-2 px-3 rounded hover:bg-gray-800 {{ request()->routeIs('admin.orders.*') ? 'bg-gray-800' : '' }}">Orders</a>
                 <a href="#" class="block py-2 px-3 rounded hover:bg-gray-800 text-gray-500">Products (soon)</a>
                 <div class="border-t border-gray-700 mt-4 pt-4">
                     <a href="{{ route('products.index') }}" class="block py-2 px-3 rounded hover:bg-gray-800 text-sm text-gray-400">&larr; Back to store</a>
