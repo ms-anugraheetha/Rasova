@@ -10,13 +10,31 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\HomeController;
 
+Route::post('/contact', function () {
+    request()->validate([
+        'name' => 'required|string',
+        'email' => 'required|email',
+        'message' => 'required|string',
+    ]);
+    // TODO: send email or persist to a ContactMessage model
+    return back()->with('status', 'Message sent!');
+})->name('contact.submit');
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
-Route::get('/', function () {
-    return view('welcome');
-});
+
+Route::view('/about', 'about')->name('about');
+Route::view('/contact', 'contact')->name('contact');
+
+Route::post('/newsletter', function () {
+    request()->validate(['email' => 'required|email']);
+    // TODO: persist the email (e.g. Subscriber::create($request->only('email')))
+    return back()->with('status', 'Subscribed!');
+})->name('newsletter.subscribe');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

@@ -32,6 +32,14 @@ class Product extends Model
         ];
     }
 
+    public function getDefaultVariantAttribute()
+    {
+    return $this->variants()
+        ->where('is_active', true)
+        ->orderBy('price_minor')
+        ->first();
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

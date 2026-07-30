@@ -1,0 +1,22 @@
+/* Rasova — brand token overrides on top of the Organic design system.
+   Only overrides + additions; component classes stay in the DS stylesheet. */
+:root {
+  --color-accent: #b3132d;
+  --color-accent-100: #fbe9ea;
+  --color-accent-200: #f4cbcd;
+  --color-accent-300: #e59ba0;
+  --color-accent-400: #d06670;
+  --color-accent-500: #b3132d;
+  --color-accent-600: #940f25;
+  --color-accent-700: #730c1d;
+  --color-accent-800: #500813;
+  --color-accent-900: #33050c;
+
+  --color-star: #c98a2e;
+  --color-warning: #b8862c;
+  --color-error: #94162a;
+  --color-info: #645c50;
+  --color-success: var(--color-accent-2-600);
+  --color-discount: var(--color-accent-600);
+}
+.rasova-serif { font-family: var(--font-heading); }
