@@ -93,7 +93,7 @@
 
 <header class="wrap plist-header">
     <h1>All pickles</h1>
-    <p style="opacity:0.7;margin:0;">{{ $products->total() }} handmade varieties, pressed in small batches.</p>
+    <p style="opacity:0.7;margin:0;">{{ $products->total() }} handmade varieties.</p>
 </header>
 
 <div class="wrap plist-layout">
@@ -143,13 +143,7 @@
                 </button>
             </div>
 
-            <form method="GET" action="{{ route('products.index') }}" class="seg" role="radiogroup" aria-label="Sort">
-                @if(request('category'))<input type="hidden" name="category" value="{{ request('category') }}">@endif
-                @if(request('price'))<input type="hidden" name="price" value="{{ request('price') }}">@endif
-                <label class="seg-opt"><input type="radio" name="sort" value="newest" onchange="this.form.submit()" @checked(request('sort', 'newest') === 'newest')>Newest</label>
-                <label class="seg-opt"><input type="radio" name="sort" value="price" onchange="this.form.submit()" @checked(request('sort') === 'price')>Price &uarr;</label>
-                <label class="seg-opt"><input type="radio" name="sort" value="name" onchange="this.form.submit()" @checked(request('sort') === 'name')>Name</label>
-            </form>
+            
         </div>
 
         <div class="plist-grid">
@@ -204,7 +198,7 @@
                     @endif
                 </div>
             @empty
-                <p style="grid-column:1/-1;opacity:0.7;padding:32px 0;">No pickles match those filters yet &mdash; try clearing a filter.</p>
+                <p style="grid-column:1/-1;opacity:0.7;padding:32px 0;">No pickles match those filters yet -try clearing a filter.</p>
             @endforelse
         </div>
 

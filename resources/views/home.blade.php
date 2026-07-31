@@ -78,7 +78,7 @@
     <div style="position:absolute;right:-160px;top:-80px;width:420px;height:420px;border-radius:50%;background:var(--color-accent-2-200);z-index:-1;opacity:0.7;"></div>
     <div class="hero-grid">
         <div class="hero-copy">
-            <span class="tag tag-accent">Small-batch &middot; Kerala, since 2023</span>
+            <span class="tag tag-accent"> Kerala, since 2023</span>
             <h1>Homemade Kerala pickles, Made Fresh with love.</h1>
             <p> Prepared fresh after every order, with no preservatives and no shortcuts.</p>
             <div class="hero-actions">
@@ -98,7 +98,7 @@
 <section class="wrap" style="padding-bottom:48px;">
     <div class="section-head">
         <h2>Shop by variety</h2>
-        <a href="{{ route('products.index') }}">View all &rarr;</a>
+        <a href="{{ route('products.index') }}">View all </a>
     </div>
     <div class="cat-grid">
         @foreach($categories as $category)
@@ -115,7 +115,7 @@
 <section class="wrap" style="padding-bottom:56px;">
     <div class="section-head">
         <h2>Bestsellers</h2>
-        <a href="{{ route('products.index') }}">View all &rarr;</a>
+        <a href="{{ route('products.index') }}">View all </a>
     </div>
     <div class="best-grid">
         @foreach($bestsellers as $product)
@@ -154,9 +154,8 @@
         <div>
             <span class="tag tag-accent-2">Our story</span>
             <h2>A kitchen in Kerala, not a factory.</h2>
-            <p>Rasova started in one family kitchen, sun-drying mangoes on the terrace and pressing them in small clay jars. Every batch we ship today is still made that way - by hand, in small runs, with ingredients we'd feed our own family.</p>
+            <p>Every business has a beginning. Ours started with a family recipe and a few curious friends. One taste led to another, and soon we were making pickles for more than just ourselves. We still prepare every order by hand, with ingredients we’d feed our own family.</p>
             <div class="story-stats">
-                <div><p>30+</p><p>Years of recipes</p></div>
                 <div><p>0</p><p>Preservatives</p></div>
                 <div><p>100%</p><p>Handmade</p></div>
             </div>
@@ -169,18 +168,5 @@
     <figcaption style="font-size:13px;opacity:0.65;margin-top:14px;"> Anjali R., verified buyer</figcaption>
 </section>
 
-<section class="newsletter-section">
-    <div class="wrap newsletter-row">
-        <div>
-            <h3>Get 10% off your first jar</h3>
-            <p style="font-size:14px;opacity:0.75;margin:0;">Join the list for new batches and recipes from the kitchen.</p>
-        </div>
-        <form action="{{ route('newsletter.subscribe') }}" method="POST" class="newsletter-form">
-            @csrf
-            <input class="input" type="email" name="email" placeholder="you@example.com" aria-label="Email address" required>
-            <button type="submit" class="btn btn-primary">Subscribe</button>
-        </form>
-    </div>
-</section>
 
 @endsection
