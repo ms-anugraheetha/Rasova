@@ -79,8 +79,8 @@
     <div class="hero-grid">
         <div class="hero-copy">
             <span class="tag tag-accent">Small-batch &middot; Kerala, since 2023</span>
-            <h1>Homemade Kerala pickles, made slow.</h1>
-            <p>Sun-cured mango, lemon, prawns and kondattam &mdash; pressed in small batches the way our grandmothers did, with no preservatives and no shortcuts.</p>
+            <h1>Homemade Kerala pickles, Made Fresh with love.</h1>
+            <p> Prepared fresh after every order, with no preservatives and no shortcuts.</p>
             <div class="hero-actions">
                 <a href="{{ route('products.index') }}" class="btn btn-primary">
                     Shop the collection
@@ -90,7 +90,7 @@
             </div>
         </div>
         <figure class="washed hero-figure" style="margin:0;border-radius:24px;overflow:hidden;">
-            <img src="{{ asset('design/hero-jar.jpg') }}" alt="Jars of Rasova pickle on a warm surface" style="width:100%;aspect-ratio:4/5;object-fit:cover;">
+            <img src="{{ asset('design/hero-jar.png') }}" alt="Jars of Rasova pickle on a warm surface" style="width:100%;aspect-ratio:4/5;object-fit:cover;">
         </figure>
     </div>
 </section>
@@ -154,7 +154,7 @@
         <div>
             <span class="tag tag-accent-2">Our story</span>
             <h2>A kitchen in Kerala, not a factory.</h2>
-            <p>Rasova started in one family kitchen, sun-drying mangoes on the terrace and pressing them in small clay jars. Every batch we ship today is still made that way &mdash; by hand, in small runs, with ingredients we'd feed our own family.</p>
+            <p>Rasova started in one family kitchen, sun-drying mangoes on the terrace and pressing them in small clay jars. Every batch we ship today is still made that way - by hand, in small runs, with ingredients we'd feed our own family.</p>
             <div class="story-stats">
                 <div><p>30+</p><p>Years of recipes</p></div>
                 <div><p>0</p><p>Preservatives</p></div>
@@ -166,7 +166,7 @@
 
 <section class="wrap quote-section">
     <blockquote>&ldquo;It tastes exactly like the pickle my ammachi used to make. I order six jars at a time now.&rdquo;</blockquote>
-    <figcaption style="font-size:13px;opacity:0.65;margin-top:14px;">&mdash; Anjali R., verified buyer</figcaption>
+    <figcaption style="font-size:13px;opacity:0.65;margin-top:14px;"> Anjali R., verified buyer</figcaption>
 </section>
 
 <section class="newsletter-section">

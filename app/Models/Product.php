@@ -34,10 +34,23 @@ class Product extends Model
 
     public function getDefaultVariantAttribute()
     {
-    return $this->variants()
-        ->where('is_active', true)
-        ->orderBy('price_minor')
-        ->first();
+        return $this->variants()
+            ->where('is_active', true)
+            ->orderBy('price_minor')
+            ->first();
+    }
+
+    /**
+     * Primary product image URL, falling back to first image, then placeholder.
+     */
+    public function getPrimaryImageUrlAttribute()
+    {
+        $primary = $this->images()->where('is_primary', true)->first()
+            ?? $this->images()->first();
+
+        return $primary
+            ? asset('storage/' . $primary->image)
+            : asset('design/images/placeholder.jpg');
     }
 
     public function category(): BelongsTo

@@ -83,14 +83,14 @@
     <div class="pdp-gallery">
         @php $firstImage = $product->images->first(); @endphp
         <div class="pdp-gallery-main" id="pdpMainImage">
-            <img src="{{ $firstImage ? asset('storage/' . $firstImage->path) : $product->primary_image_url }}" alt="{{ $product->name }}" id="pdpMainImageTag">
+            <img src="{{ $firstImage ? asset('storage/' . $firstImage->image) : $product->primary_image_url }}" alt="{{ $product->name }}" id="pdpMainImageTag">
         </div>
 
         @if ($product->images->count() > 1)
             <div class="pdp-thumbs">
                 @foreach ($product->images as $index => $image)
-                    <button type="button" class="pdp-thumb-btn {{ $index === 0 ? 'active' : '' }}" data-src="{{ asset('storage/' . $image->path) }}">
-                        <img src="{{ asset('storage/' . $image->path) }}" alt="{{ $product->name }} image {{ $index + 1 }}">
+                    <button type="button" class="pdp-thumb-btn {{ $index === 0 ? 'active' : '' }}" data-src="{{ asset('storage/' . $image->image) }}">
+                        <img src="{{ asset('storage/' . $image->image) }}" alt="{{ $product->name }} image {{ $index + 1 }}">
                     </button>
                 @endforeach
             </div>

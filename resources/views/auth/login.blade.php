@@ -1,47 +1,86 @@
-<x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+@extends('layouts.storefront')
 
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
+@section('title', 'Log In — Rasova')
 
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
+@section('extra-styles')
+.auth-wrap { padding: 48px 0 72px; display: flex; justify-content: center; }
+.auth-card { width: 100%; max-width: 400px; }
+.auth-card h1 { font-size: clamp(24px, 6vw, 30px); margin: 0 0 6px; text-align: center; }
+.auth-card .subtitle { font-size: 14px; opacity: 0.65; text-align: center; margin: 0 0 28px; }
 
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
+.auth-status { font-size: 13px; color: var(--color-success, green); margin-bottom: 16px; text-align: center; }
 
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
+.field-group { margin-bottom: 16px; }
+.field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.field-group input {
+    width: 100%; min-height: 46px; padding: 0 14px; border-radius: 10px;
+    border: 1px solid var(--color-divider); background: var(--color-bg); color: inherit; font-size: 15px;
+}
+.field-error { color: var(--color-error, #b3132d); font-size: 12px; margin-top: 6px; }
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
+.remember-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+.remember-row input { width: 18px; height: 18px; }
+.remember-row label { font-size: 14px; }
 
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-            </label>
-        </div>
+.auth-actions { display: flex; flex-direction: column; gap: 12px; }
+.auth-actions .btn { width: 100%; min-height: 48px; }
+.auth-forgot { font-size: 13px; text-align: center; }
 
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
+.auth-footer { text-align: center; font-size: 14px; margin-top: 24px; opacity: 0.75; }
 
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+@media (min-width: 768px) {
+    .auth-wrap { padding: 72px 0 96px; }
+    .auth-card { padding: 32px; border-radius: 20px; background: var(--color-surface); }
+}
+@endsection
+
+@section('content')
+
+<div class="wrap auth-wrap">
+    <div class="auth-card">
+        <h1>Welcome back</h1>
+        <p class="subtitle">Log in to your Rasova account</p>
+
+        @if (session('status'))
+            <p class="auth-status">{{ session('status') }}</p>
+        @endif
+
+        <form method="POST" action="{{ route('login') }}">
+            @csrf
+
+            <div class="field-group">
+                <label for="email" class="field-label">Email</label>
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username">
+                @error('email')
+                    <p class="field-error">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="field-group">
+                <label for="password" class="field-label">Password</label>
+                <input id="password" type="password" name="password" required autocomplete="current-password">
+                @error('password')
+                    <p class="field-error">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="remember-row">
+                <input id="remember_me" type="checkbox" name="remember">
+                <label for="remember_me">Remember me</label>
+            </div>
+
+            <div class="auth-actions">
+                <button type="submit" class="btn btn-primary">Log in</button>
+                @if (Route::has('password.request'))
+                    <a href="{{ route('password.request') }}" class="auth-forgot">Forgot your password?</a>
+                @endif
+            </div>
+        </form>
+
+        @if (Route::has('register'))
+            <p class="auth-footer">Don't have an account? <a href="{{ route('register') }}">Sign up</a></p>
+        @endif
+    </div>
+</div>
+
+@endsection

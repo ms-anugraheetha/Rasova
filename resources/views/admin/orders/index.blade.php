@@ -1,58 +1,57 @@
-<x-admin-layout>
-    <h1 class="text-2xl font-bold mb-6">Orders</h1>
+@extends('layouts.admin')
 
-    @if (session('success'))
-        <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4">{{ session('success') }}</div>
-    @endif
+@section('title', 'Orders')
 
-    <form method="GET" class="flex gap-4 mb-6">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search order number..."
-               class="border rounded px-3 py-2 flex-1">
+@section('content')
 
-        <select name="status" class="border rounded px-3 py-2">
-            <option value="">All Statuses</option>
-            @foreach (['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'stock_issue'] as $status)
-                <option value="{{ $status }}" @selected(request('status') == $status)>{{ ucfirst($status) }}</option>
-            @endforeach
-        </select>
+<h1>Orders</h1>
 
-        <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded">Filter</button>
-    </form>
+<form method="GET" style="display:flex;gap:12px;margin-bottom:20px;">
+    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search order number..." class="admin-input" style="flex:1;">
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50">
-                <tr class="text-left text-gray-500">
-                    <th class="p-3">Order #</th>
-                    <th class="p-3">Customer</th>
-                    <th class="p-3">Status</th>
-                    <th class="p-3">Payment</th>
-                    <th class="p-3">Total</th>
-                    <th class="p-3">Date</th>
-                    <th class="p-3"></th>
+    <select name="status" class="admin-select" style="max-width:200px;">
+        <option value="">All statuses</option>
+        @foreach (['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'stock_issue'] as $status)
+            <option value="{{ $status }}" @selected(request('status') == $status)>{{ ucfirst($status) }}</option>
+        @endforeach
+    </select>
+
+    <button type="submit" class="btn btn-primary" style="min-height:44px;padding:0 20px;">Filter</button>
+</form>
+
+<div class="admin-card">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th>Payment</th>
+                <th>Total</th>
+                <th>Date</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($orders as $order)
+                <tr>
+                    <td>{{ $order->order_number }}</td>
+                    <td>{{ $order->user?->full_name ?? $order->guest_email ?? 'Guest' }}</td>
+                    <td>{{ ucfirst($order->order_status) }}</td>
+                    <td>{{ ucfirst($order->payment_status) }}</td>
+                    <td>&#8377;{{ number_format($order->total_minor / 100, 2) }}</td>
+                    <td>{{ $order->created_at->format('M j, Y') }}</td>
+                    <td><a href="{{ route('admin.orders.show', $order->id) }}" class="admin-btn-link">View</a></td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse ($orders as $order)
-                    <tr class="border-t">
-                        <td class="p-3">{{ $order->order_number }}</td>
-                        <td class="p-3">{{ $order->user->first_name ?? 'N/A' }}</td>
-                        <td class="p-3">{{ ucfirst($order->order_status) }}</td>
-                        <td class="p-3">{{ ucfirst($order->payment_status) }}</td>
-                        <td class="p-3">₹{{ number_format($order->total_minor / 100, 2) }}</td>
-                        <td class="p-3">{{ $order->created_at->format('M j, Y') }}</td>
-                        <td class="p-3">
-                            <a href="{{ route('admin.orders.show', $order->id) }}" class="text-blue-600">View</a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="7" class="p-4 text-gray-500">No orders found.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @empty
+                <tr><td colspan="7" style="opacity:0.6;">No orders found.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
-    <div class="mt-4">
-        {{ $orders->links() }}
-    </div>
-</x-admin-layout>
+<div style="margin-top:16px;">
+    {{ $orders->links() }}
+</div>
+
+@endsection

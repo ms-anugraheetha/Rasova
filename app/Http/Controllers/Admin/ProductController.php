@@ -68,7 +68,7 @@ class ProductController extends Controller
 
             ProductImage::create([
                 'product_id' => $product->id,
-                'image_path' => $path,
+                'image' => $path,
                 'is_primary' => true,
                 'sort_order' => 1,
             ]);
@@ -123,7 +123,7 @@ class ProductController extends Controller
 
         ProductImage::create([
             'product_id' => $product->id,
-            'image_path' => $path,
+            'image' => $path,
             'is_primary' => $isFirstImage,
             'sort_order' => $product->images()->count() + 1,
         ]);
@@ -133,7 +133,7 @@ class ProductController extends Controller
 
     public function deleteImage(ProductImage $image)
     {
-        Storage::disk('public')->delete($image->image_path);
+        Storage::disk('public')->delete($image->image);
         $image->delete();
 
         return back()->with('success', 'Image removed.');

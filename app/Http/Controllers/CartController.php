@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
+use App\Services\CartResolver;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    public function __construct(protected CartResolver $cartResolver)
+    {
+    }
+
     public function index(Request $request)
     {
-        $cart = Cart::firstOrCreate(['user_id' => $request->user()->id]);
+        $cart = $this->cartResolver->resolve($request);
         $items = $cart->items()->with('productVariant.product')->get();
 
         $subtotal = $items->sum(fn ($item) => $item->productVariant->price_minor * $item->quantity);
@@ -28,15 +32,13 @@ class CartController extends Controller
 
         $variant = ProductVariant::findOrFail($validated['product_variant_id']);
 
-
-
-        $cart = Cart::firstOrCreate(['user_id' => $request->user()->id]);
+        $cart = $this->cartResolver->resolve($request);
 
         $existingItem = $cart->items()->where('product_variant_id', $variant->id)->first();
 
         if ($existingItem) {
             $newQuantity = $existingItem->quantity + $validated['quantity'];
-            
+
             $existingItem->update(['quantity' => $newQuantity]);
         } else {
             CartItem::create([
@@ -57,8 +59,6 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        
-
         $cartItem->update(['quantity' => $validated['quantity']]);
 
         return back()->with('success', 'Cart updated.');
@@ -74,12 +74,15 @@ class CartController extends Controller
     }
 
     /**
-     * Make sure the cart item actually belongs to the logged-in user's cart —
-     * otherwise anyone could edit/delete another user's cart items by guessing IDs.
+     * Make sure the cart item actually belongs to the current cart —
+     * works for both logged-in users and guests, since it compares
+     * against the resolved cart rather than assuming a user_id exists.
      */
     protected function authorizeCartItem(Request $request, CartItem $cartItem): void
     {
-        if ($cartItem->cart->user_id !== $request->user()->id) {
+        $cart = $this->cartResolver->resolve($request);
+
+        if ($cartItem->cart_id !== $cart->id) {
             abort(403);
         }
     }

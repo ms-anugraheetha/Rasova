@@ -17,8 +17,8 @@
 <section class="wrap about-hero">
     <span class="tag tag-accent">Our story</span>
     <h1>A kitchen in Kerala, not a factory.</h1>
-    <p>Rasova started in one family kitchen, sun-drying mangoes on the terrace and pressing them in small clay jars. Every batch we ship today is still made that way &mdash; by hand, in small runs, with ingredients we'd feed our own family.</p>
-    <p>No preservatives, no shortcuts, no factory lines &mdash; just recipes passed down and pickles pressed the slow way.</p>
+    <p>Rasova started in one family kitchen, sun-drying mangoes on the terrace and pressing them in small clay jars. Every batch we ship today is still made that way; by hand, in small runs, with ingredients we'd feed our own family.</p>
+    <p>No preservatives, no shortcuts, no factory lines; just recipes passed down and pickles pressed the slow way.</p>
 </section>
 
 <figure class="wrap about-figure">

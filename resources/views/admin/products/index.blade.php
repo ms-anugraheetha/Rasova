@@ -1,50 +1,49 @@
-<x-admin-layout>
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Products</h1>
-        <a href="{{ route('admin.products.create') }}" class="bg-gray-800 text-white px-4 py-2 rounded">+ Add Product</a>
-    </div>
+@extends('layouts.admin')
 
-    @if (session('success'))
-        <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4">{{ session('success') }}</div>
-    @endif
+@section('title', 'Products')
 
-    <form method="GET" class="mb-6">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..."
-               class="border rounded px-3 py-2 w-full max-w-sm">
-    </form>
+@section('content')
 
-    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-        <table class="w-full text-sm">
-            <thead class="bg-gray-50">
-                <tr class="text-left text-gray-500">
-                    <th class="p-3">Name</th>
-                    <th class="p-3">Category</th>
-                    <th class="p-3">Variants</th>
-                    <th class="p-3">Total Stock</th>
-                    <th class="p-3">Available</th>
-                    <th class="p-3"></th>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <h1 style="margin:0;">Products</h1>
+    <a href="{{ route('admin.products.create') }}" class="btn btn-primary" style="min-height:44px;padding:0 20px;display:inline-flex;align-items:center;">+ Add product</a>
+</div>
+
+<form method="GET" style="margin-bottom:20px;">
+    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="admin-input" style="max-width:360px;">
+</form>
+
+<div class="admin-card">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Variants</th>
+                <th>Total stock</th>
+                <th>Available</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($products as $product)
+                <tr>
+                    <td>{{ $product->name }}</td>
+                    <td>{{ $product->category->name ?? 'N/A' }}</td>
+                    <td>{{ $product->variants->count() }}</td>
+                    <td>{{ $product->variants->sum('stock_quantity') }}</td>
+                    <td>{{ $product->is_available ? 'Yes' : 'No' }}</td>
+                    <td><a href="{{ route('admin.products.edit', $product->id) }}" class="admin-btn-link">Edit</a></td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse ($products as $product)
-                    <tr class="border-t">
-                        <td class="p-3">{{ $product->name }}</td>
-                        <td class="p-3">{{ $product->category->name ?? 'N/A' }}</td>
-                        <td class="p-3">{{ $product->variants->count() }}</td>
-                        <td class="p-3">{{ $product->variants->sum('stock_quantity') }}</td>
-                        <td class="p-3">{{ $product->is_available ? 'Yes' : 'No' }}</td>
-                        <td class="p-3">
-                            <a href="{{ route('admin.products.edit', $product->id) }}" class="text-blue-600">Edit</a>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="6" class="p-4 text-gray-500">No products found.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+            @empty
+                <tr><td colspan="6" style="opacity:0.6;">No products found.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
 
-    <div class="mt-4">
-        {{ $products->links() }}
-    </div>
-</x-admin-layout>
+<div style="margin-top:16px;">
+    {{ $products->links() }}
+</div>
+
+@endsection

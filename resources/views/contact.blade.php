@@ -25,14 +25,14 @@
 @section('content')
 <header class="wrap contact-hero">
     <h1>Get in touch</h1>
-    <p>Questions about an order, a wholesale enquiry, or just want to say hello &mdash; we read every message.</p>
+    <p>Questions about an order, a wholesale enquiry, or just want to say hello - we read every message.</p>
 </header>
 
 <div class="wrap contact-layout">
     <div class="contact-info">
         <div>
             <h3>Email</h3>
-            <p>hello@rasova.in</p>
+            <p>Rasovadelights@gmail.com</p>
         </div>
         <div>
             <h3>Phone</h3>
@@ -46,8 +46,8 @@
 
     <form method="POST" action="{{ route('contact.submit') }}" class="contact-form">
         @csrf
-        <input class="input" type="text" name="name" placeholder="Your name" required>
-        <input class="input" type="email" name="email" placeholder="you@example.com" required>
+        <input class="input" type="text" name="name" placeholder="Name" required>
+        <input class="input" type="email" name="email" placeholder="Email Address" required>
         <textarea class="input" name="message" placeholder="How can we help?" required></textarea>
         <button type="submit" class="btn btn-primary">Send message</button>
     </form>

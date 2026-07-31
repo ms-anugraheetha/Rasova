@@ -57,7 +57,8 @@
             background: var(--color-bg); border-left: 1px solid var(--color-divider);
             padding: 24px 20px; box-shadow: var(--shadow-lg); z-index: 60;
         }
-        .nav-links.mobile-open a { padding: 12px 4px; font-size: 17px; border-bottom: 1px solid var(--color-divider); }
+        .nav-links.mobile-open a, .nav-links.mobile-open .nav-link-btn { padding: 12px 4px; font-size: 17px; border-bottom: 1px solid var(--color-divider); }
+        .nav-link-btn { all: unset; cursor: pointer; display: block; width: 100%; color: var(--color-text); font-family: inherit; }
         .nav-scrim { display: none; }
         .nav-scrim.show {
             display: block; position: fixed; inset: 0; background: color-mix(in srgb, #000 40%, transparent);
@@ -98,6 +99,12 @@
         <a href="{{ route('products.index') }}" @if(request()->routeIs('products.*')) aria-current="page" @endif>Shop</a>
         <a href="{{ route('about') }}" @if(request()->routeIs('about')) aria-current="page" @endif>About</a>
         <a href="{{ route('contact') }}" @if(request()->routeIs('contact')) aria-current="page" @endif>Contact</a>
+        @auth
+            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                @csrf
+                <button type="submit" class="nav-link-btn">Log out</button>
+            </form>
+        @endauth
     </div>
 
     <div style="display:flex;gap:2px;align-items:center;">
@@ -111,6 +118,16 @@
                 <span class="badge">{{ $cartCount }}</span>
             @endif
         </a>
+
+        @auth
+            <a href="{{ route('profile.edit') }}" class="icon-btn" title="Account">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </a>
+        @else
+            <a href="{{ route('login') }}" class="icon-btn" title="Log in">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </a>
+        @endauth
 
         <div class="hamburger-btn icon-btn" title="Menu" id="hamburgerBtn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></svg>
@@ -215,7 +232,7 @@
             display: flex; gap: 24px; position: static; width: auto; height: auto;
             background: none; border: none; box-shadow: none; padding: 0; flex-direction: row;
         }
-        .nav-links a { padding: 0; border-bottom: none; font-size: 14px; }
+        .nav-links a, .nav-links .nav-link-btn { padding: 0; border-bottom: none; font-size: 14px; }
         .hamburger-btn { display: none; }
         .mobile-tabbar { display: none; }
         body { padding-bottom: 0; }

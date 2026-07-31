@@ -13,13 +13,20 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 
 Route::post('/contact', function () {
-    request()->validate([
-        'name' => 'required|string',
+    $validated = request()->validate([
+        'name' => 'required|string|max:255',
         'email' => 'required|email',
-        'message' => 'required|string',
+        'message' => 'required|string|max:5000',
     ]);
-    // TODO: send email or persist to a ContactMessage model
-    return back()->with('status', 'Message sent!');
+
+    \Illuminate\Support\Facades\Mail::to('rasovadelights@gmail.com')
+        ->send(new \App\Mail\ContactFormSubmitted(
+            senderName: $validated['name'],
+            senderEmail: $validated['email'],
+            messageBody: $validated['message'],
+        ));
+
+    return back()->with('status', 'Message sent! We\'ll get back to you soon.');
 })->name('contact.submit');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
