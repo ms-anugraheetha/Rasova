@@ -44,6 +44,12 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // Associate any past guest orders placed with this same email —
+        // so a returning guest who now creates an account can see their order history.
+        \App\Models\Order::where('guest_email', $user->email)
+            ->whereNull('user_id')
+            ->update(['user_id' => $user->id]);
+
         event(new Registered($user));
 
         Auth::login($user);

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\GatewayController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RazorpayWebhookController;
@@ -12,46 +13,46 @@ use App\Http\Controllers\Admin\ProductVariantController as AdminProductVariantCo
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 
-Route::post('/contact', function () {
-    $validated = request()->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email',
-        'message' => 'required|string|max:5000',
-    ]);
+// Gateway — the only routes reachable before a Log In / Create Account / Guest
+// choice is made. Never wrapped in the 'gateway' middleware themselves.
+Route::get('/welcome', [GatewayController::class, 'show'])->name('gateway');
+Route::post('/welcome/guest', [GatewayController::class, 'continueAsGuest'])->name('gateway.guest');
 
-    \Illuminate\Support\Facades\Mail::to('rasovadelights@gmail.com')
-        ->send(new \App\Mail\ContactFormSubmitted(
-            senderName: $validated['name'],
-            senderEmail: $validated['email'],
-            messageBody: $validated['message'],
-        ));
+Route::middleware('gateway')->group(function () {
 
-    return back()->with('status', 'Message sent! We\'ll get back to you soon.');
-})->name('contact.submit');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
+    Route::view('/about', 'about')->name('about');
+    Route::view('/contact', 'contact')->name('contact');
 
+    Route::post('/contact', function () {
+        $validated = request()->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email',
+            'message' => 'required|string|max:5000',
+        ]);
 
-Route::view('/about', 'about')->name('about');
-Route::view('/contact', 'contact')->name('contact');
+        \Illuminate\Support\Facades\Mail::to('rasovadelights@gmail.com')
+            ->send(new \App\Mail\ContactFormSubmitted(
+                senderName: $validated['name'],
+                senderEmail: $validated['email'],
+                messageBody: $validated['message'],
+            ));
 
-Route::post('/newsletter', function () {
-    request()->validate(['email' => 'required|email']);
-    // TODO: persist the email (e.g. Subscriber::create($request->only('email')))
-    return back()->with('status', 'Subscribed!');
-})->name('newsletter.subscribe');
+        return back()->with('status', 'Message sent! We\'ll get back to you soon.');
+    })->name('contact.submit');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    Route::post('/newsletter', function () {
+        request()->validate(['email' => 'required|email']);
+        // TODO: persist the email (e.g. Subscriber::create($request->only('email')))
+        return back()->with('status', 'Subscribed!');
+    })->name('newsletter.subscribe');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
+    // Cart and checkout are open to guests — no auth middleware. CartController
+    // and CheckoutController resolve a session-scoped guest cart via
+    // App\Services\CartResolver when there's no logged-in user.
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('/cart', [CartController::class, 'add'])->name('cart.add');
     Route::patch('/cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
@@ -61,6 +62,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/{orderId}/payment', [CheckoutController::class, 'payment'])->name('checkout.payment');
     Route::get('/checkout/{orderId}/confirmation', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
+
+    Route::middleware('auth')->group(function () {
+        Route::post('/products/{product}/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
+
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    });
+
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->middleware(['auth', 'verified'])->name('dashboard');
 });
 
 Route::post('/webhooks/razorpay', [RazorpayWebhookController::class, 'handle']);
@@ -85,6 +98,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/products/{product}/variants', [AdminProductVariantController::class, 'store'])->name('variants.store');
     Route::patch('/variants/{variant}', [AdminProductVariantController::class, 'update'])->name('variants.update');
     Route::delete('/variants/{variant}', [AdminProductVariantController::class, 'destroy'])->name('variants.destroy');
+
+    Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('reviews.index');
+    Route::patch('/reviews/{review}/approve', [\App\Http\Controllers\Admin\ReviewController::class, 'approve'])->name('reviews.approve');
+    Route::patch('/reviews/{review}/reject', [\App\Http\Controllers\Admin\ReviewController::class, 'reject'])->name('reviews.reject');
+    Route::delete('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
 });
 
 require __DIR__.'/auth.php';

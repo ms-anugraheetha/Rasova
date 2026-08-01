@@ -24,6 +24,7 @@
 .plist-layout { padding-bottom: 56px; }
 .plist-toolbar { display: flex; flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 16px; }
 .plist-toolbar-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.sort-form { display: flex; align-items: center; }
 .filter-toggle-btn { min-height: 44px; }
 .seg { width: 100%; }
 .seg-opt { flex: 1; justify-content: center; min-height: 44px; }
@@ -121,14 +122,6 @@
                 @endforeach
             </div>
 
-            <div class="filter-group">
-                <h6 style="margin-bottom:14px;">Price</h6>
-                <label class="radio"><input type="radio" name="price" value="" onchange="this.form.submit()" @checked(!request('price'))><span class="dot"></span>All prices</label>
-                <label class="radio"><input type="radio" name="price" value="under_300" onchange="this.form.submit()" @checked(request('price') === 'under_300')><span class="dot"></span>Under &#8377;300</label>
-                <label class="radio"><input type="radio" name="price" value="300_500" onchange="this.form.submit()" @checked(request('price') === '300_500')><span class="dot"></span>&#8377;300 &ndash; &#8377;500</label>
-                <label class="radio"><input type="radio" name="price" value="500_plus" onchange="this.form.submit()" @checked(request('price') === '500_plus')><span class="dot"></span>&#8377;500+</label>
-            </div>
-
             <button type="submit" class="btn btn-primary filter-apply-btn">Show results</button>
         </form>
     </aside>
@@ -143,7 +136,16 @@
                 </button>
             </div>
 
-            
+            <form method="GET" action="{{ route('products.index') }}" class="sort-form">
+                @if(request('category'))<input type="hidden" name="category" value="{{ request('category') }}">@endif
+                <label for="sortSelect" style="font-size:13px;opacity:0.65;margin-right:8px;">Sort by</label>
+                <select name="sort" id="sortSelect" class="admin-select" onchange="this.form.submit()" style="min-height:44px;border-radius:10px;border:1px solid var(--color-divider);background:var(--color-bg);color:inherit;padding:0 12px;">
+                    <option value="newest" @selected(request('sort', 'newest') === 'newest')>Newest</option>
+                    <option value="price_asc" @selected(request('sort') === 'price_asc')>Price: Low to High</option>
+                    <option value="price_desc" @selected(request('sort') === 'price_desc')>Price: High to Low</option>
+                    <option value="name_asc" @selected(request('sort') === 'name_asc')>Name: A to Z</option>
+                </select>
+            </form>
         </div>
 
         <div class="plist-grid">

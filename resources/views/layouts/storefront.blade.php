@@ -124,9 +124,15 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
             </a>
         @else
-            <a href="{{ route('login') }}" class="icon-btn" title="Log in">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            </a>
+            <div style="position:relative;">
+                <button type="button" class="icon-btn" title="Guest Mode" id="guestModeBtn" style="border:none;background:none;cursor:pointer;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </button>
+                <div id="guestModeMenu" style="display:none;position:absolute;right:0;top:52px;background:var(--color-bg);border:1px solid var(--color-divider);border-radius:12px;box-shadow:var(--shadow-lg);min-width:160px;overflow:hidden;z-index:70;">
+                    <a href="{{ route('login') }}" style="display:block;padding:12px 16px;font-size:14px;color:var(--color-text);">Log In</a>
+                    <a href="{{ route('register') }}" style="display:block;padding:12px 16px;font-size:14px;color:var(--color-text);border-top:1px solid var(--color-divider);">Create Account</a>
+                </div>
+            </div>
         @endauth
 
         <div class="hamburger-btn icon-btn" title="Menu" id="hamburgerBtn">
@@ -215,6 +221,20 @@
             scrim.classList.toggle('show');
         });
         scrim && scrim.addEventListener('click', close);
+    })();
+
+    (function () {
+        var guestBtn = document.getElementById('guestModeBtn');
+        var guestMenu = document.getElementById('guestModeMenu');
+        if (!guestBtn || !guestMenu) return;
+
+        guestBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            guestMenu.style.display = guestMenu.style.display === 'block' ? 'none' : 'block';
+        });
+        document.addEventListener('click', function () {
+            guestMenu.style.display = 'none';
+        });
     })();
 </script>
 

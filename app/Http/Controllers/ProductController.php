@@ -39,6 +39,12 @@ class ProductController extends Controller
                     ->orderBy('price_minor')
                     ->limit(1)
             ),
+            'price_desc' => $query->orderByDesc(
+                \App\Models\ProductVariant::select('price_minor')
+                    ->whereColumn('product_id', 'products.id')
+                    ->orderBy('price_minor')
+                    ->limit(1)
+            ),
             default => $query->latest(),
         };
 
