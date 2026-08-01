@@ -72,4 +72,55 @@ class Product extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    /**
+     * Count of publicly-visible reviews (approved + not hidden).
+     * Uses the eager-loaded withCount('reviews as review_count') value when
+     * present (e.g. on the product grid) to avoid an N+1 query per product;
+     * falls back to a live query only when accessed without eager loading.
+     */
+    public function getReviewCountAttribute(): int
+    {
+        if (array_key_exists('review_count', $this->attributes)) {
+            return (int) $this->attributes['review_count'];
+        }
+
+        return $this->reviews()->visible()->count();
+    }
+
+    /**
+     * Star-by-star breakdown of visible reviews, e.g. [5 => 12, 4 => 3, 3 => 1, 2 => 0, 1 => 0].
+     * Includes percentage of total so templates can render bar widths directly.
+     */
+    public function ratingBreakdown(): array
+    {
+        $counts = $this->reviews()->visible()
+            ->selectRaw('rating, count(*) as count')
+            ->groupBy('rating')
+            ->pluck('count', 'rating');
+
+        $total = $counts->sum();
+
+        $breakdown = [];
+        for ($star = 5; $star >= 1; $star--) {
+            $count = $counts->get($star, 0);
+            $breakdown[$star] = [
+                'count' => $count,
+                'percent' => $total > 0 ? round(($count / $total) * 100) : 0,
+            ];
+        }
+
+        return $breakdown;
+    }
+
+    /**
+     * Recalculates average_rating from currently-visible reviews (approved + not hidden).
+     * Call this after any review is created, edited, approved, rejected, hidden, unhidden, or deleted.
+     */
+    public function recalculateAverageRating(): void
+    {
+        $this->update([
+            'average_rating' => $this->reviews()->visible()->avg('rating'),
+        ]);
+    }
 }

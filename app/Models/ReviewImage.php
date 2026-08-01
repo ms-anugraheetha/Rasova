@@ -18,4 +18,9 @@ class ReviewImage extends Model
     {
         return $this->belongsTo(Review::class);
     }
+
+    public function getImageUrlAttribute(): string
+    {
+        return asset('storage/' . $this->image);
+    }
 }

@@ -100,6 +100,7 @@
         <a href="{{ route('about') }}" @if(request()->routeIs('about')) aria-current="page" @endif>About</a>
         <a href="{{ route('contact') }}" @if(request()->routeIs('contact')) aria-current="page" @endif>Contact</a>
         @auth
+            <a href="{{ route('orders.index') }}" @if(request()->routeIs('orders.*')) aria-current="page" @endif>Your Orders</a>
             <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                 @csrf
                 <button type="submit" class="nav-link-btn">Log out</button>
@@ -195,9 +196,9 @@
         <div>
             <h6 style="margin-bottom:12px;">Help</h6>
             <div style="display:grid;gap:10px;font-size:14px;">
-                {{-- Track order link removed: no customer-facing orders.index route yet.
-                     Add one (e.g. Route::get('/orders', ...)->name('orders.index'))
-                     then restore this link. --}}
+                @auth
+                    <a href="{{ route('orders.index') }}">Track order</a>
+                @endauth
                 <a href="#">Shipping</a>
                 <a href="#">Returns</a>
             </div>

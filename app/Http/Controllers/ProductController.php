@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Review;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -14,6 +15,9 @@ class ProductController extends Controller
             ->where('is_available', true)
             ->with(['category', 'variants' => function ($q) {
                 $q->where('is_active', true)->orderBy('price_minor');
+            }])
+            ->withCount(['reviews as review_count' => function ($q) {
+                $q->where('status', 'approved')->where('is_hidden', false);
             }]);
 
         // Category filter
@@ -54,7 +58,7 @@ class ProductController extends Controller
         return view('products.index', compact('products', 'categories'));
     }
 
-    public function show(string $slug)
+    public function show(string $slug, Request $request)
     {
         $product = Product::where('slug', $slug)
             ->where('is_available', true)
@@ -62,10 +66,40 @@ class ProductController extends Controller
                 'category',
                 'variants' => fn ($q) => $q->where('is_active', true)->orderBy('price_minor'),
                 'images' => fn ($q) => $q->orderBy('sort_order'),
-                'reviews' => fn ($q) => $q->where('status', 'approved')->latest(),
             ])
             ->firstOrFail();
 
-        return view('products.show', compact('product'));
+        $reviews = $product->reviews()
+            ->visible()
+            ->with(['user', 'images', 'reply.admin'])
+            ->withCount('helpfulVotes')
+            ->latest()
+            ->paginate(5, ['*'], 'reviews_page');
+
+        $ratingBreakdown = $product->ratingBreakdown();
+
+        $userReview = null;
+        $userHasDeliveredPurchase = false;
+        if ($request->user()) {
+            $userReview = Review::where('product_id', $product->id)
+                ->where('user_id', $request->user()->id)
+                ->with('images')
+                ->first();
+
+            $userHasDeliveredPurchase = \App\Models\OrderItem::where('product_id', $product->id)
+                ->whereHas('order', fn ($q) => $q->where('user_id', $request->user()->id)->where('order_status', 'delivered'))
+                ->exists();
+        }
+
+        $helpfulVoteIds = $request->user()
+            ? \App\Models\ReviewHelpfulVote::where('user_id', $request->user()->id)
+                ->whereIn('review_id', $reviews->pluck('id'))
+                ->pluck('review_id')
+                ->flip()
+            : collect();
+
+        return view('products.show', compact(
+            'product', 'reviews', 'ratingBreakdown', 'userReview', 'userHasDeliveredPurchase', 'helpfulVoteIds'
+        ));
     }
 }

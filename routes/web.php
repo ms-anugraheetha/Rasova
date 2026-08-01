@@ -65,6 +65,9 @@ Route::middleware('gateway')->group(function () {
 
     Route::middleware('auth')->group(function () {
         Route::post('/products/{product}/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
+        Route::post('/reviews/{review}/helpful', [\App\Http\Controllers\ReviewController::class, 'markHelpful'])->name('reviews.helpful');
+
+        Route::get('/orders', [\App\Http\Controllers\OrderController::class, 'index'])->name('orders.index');
 
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -72,7 +75,7 @@ Route::middleware('gateway')->group(function () {
     });
 
     Route::get('/dashboard', function () {
-        return view('dashboard');
+        return redirect()->route('home');
     })->middleware(['auth', 'verified'])->name('dashboard');
 });
 
@@ -102,6 +105,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('reviews.index');
     Route::patch('/reviews/{review}/approve', [\App\Http\Controllers\Admin\ReviewController::class, 'approve'])->name('reviews.approve');
     Route::patch('/reviews/{review}/reject', [\App\Http\Controllers\Admin\ReviewController::class, 'reject'])->name('reviews.reject');
+    Route::patch('/reviews/{review}/hide', [\App\Http\Controllers\Admin\ReviewController::class, 'hide'])->name('reviews.hide');
+    Route::patch('/reviews/{review}/unhide', [\App\Http\Controllers\Admin\ReviewController::class, 'unhide'])->name('reviews.unhide');
+    Route::post('/reviews/{review}/reply', [\App\Http\Controllers\Admin\ReviewController::class, 'reply'])->name('reviews.reply');
     Route::delete('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
 });
 

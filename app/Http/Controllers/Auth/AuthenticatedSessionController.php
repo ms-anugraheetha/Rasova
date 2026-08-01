@@ -42,6 +42,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect()->route('gateway')->withoutCookie('rasova_guest_mode');
+        return redirect()->route('home')->withoutCookie('rasova_guest_mode');
     }
 }

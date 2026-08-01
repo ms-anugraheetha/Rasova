@@ -42,6 +42,18 @@
 
 .quote-section { padding-bottom: 56px; }
 .quote-section blockquote { font-family: var(--font-heading); font-size: clamp(20px, 5vw, 27px); line-height: 1.45; max-width: 32ch; margin: 0; }
+.testimonial-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.testimonial-card {
+    display: block; text-decoration: none; color: inherit; padding: 20px; border-radius: 16px;
+    background: var(--color-surface); transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.testimonial-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.testimonial-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.testimonial-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.testimonial-name { font-size: 14px; font-weight: 600; margin: 0 0 2px; }
+.testimonial-excerpt { font-size: 14px; opacity: 0.8; line-height: 1.5; margin: 0 0 10px !important; }
+.testimonial-product { font-size: 12px; opacity: 0.55; margin: 0 !important; }
+.verified-badge { font-size: 10px; background: var(--color-accent-2-100); padding: 1px 7px; border-radius: 6px; margin-left: 4px; }
 
 .newsletter-section { background: var(--color-accent-2-100); padding: 40px 0; }
 .newsletter-row { display: flex; flex-direction: column; gap: 20px; }
@@ -57,6 +69,7 @@
     .cat-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
     .best-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .story-grid { grid-template-columns: 0.9fr 1.1fr; gap: 40px; }
+    .testimonial-grid { grid-template-columns: repeat(2, 1fr); }
     .newsletter-row { flex-direction: row; justify-content: space-between; align-items: center; }
     .newsletter-form { flex-direction: row; max-width: 420px; flex: 1; min-width: 280px; }
 }
@@ -67,6 +80,7 @@
     .hero-grid { flex-direction: row; align-items: center; gap: 56px; }
     .hero-copy, .hero-figure { flex: 1; }
     .best-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .testimonial-grid { grid-template-columns: repeat(3, 1fr); }
     .story-section, .quote-section { padding-bottom: 88px; }
     .newsletter-section { padding: 56px 0; }
 }
@@ -130,7 +144,7 @@
                 @if($product->average_rating)
                     <div class="stars">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
-                        <span style="font-size:12px;color:var(--color-text);opacity:0.7;">{{ number_format($product->average_rating, 1) }}</span>
+                        <span style="font-size:12px;color:var(--color-text);opacity:0.7;">{{ number_format($product->average_rating, 1) }} ({{ $product->review_count }})</span>
                     </div>
                 @endif
 
@@ -164,8 +178,33 @@
 </section>
 
 <section class="wrap quote-section">
-    <blockquote>&ldquo;It tastes exactly like the pickle my ammachi used to make. I order six jars at a time now.&rdquo;</blockquote>
-    <figcaption style="font-size:13px;opacity:0.65;margin-top:14px;"> Anjali R., verified buyer</figcaption>
+    @if ($testimonials->isNotEmpty())
+        <h2 style="font-size:clamp(22px, 5vw, 30px); margin: 0 0 24px;">What customers are saying</h2>
+        <div class="testimonial-grid">
+            @foreach ($testimonials as $review)
+                <a href="{{ route('products.show', $review->product->slug) }}#review-{{ $review->id }}" class="testimonial-card">
+                    <div class="testimonial-head">
+                        <img src="{{ $review->user->avatar_url }}" alt="{{ $review->user->full_name }}" class="testimonial-avatar">
+                        <div>
+                            <p class="testimonial-name">
+                                {{ $review->user->full_name }}
+                                @if ($review->verified_purchase)
+                                    <span class="verified-badge">Verified</span>
+                                @endif
+                            </p>
+                            <div class="review-stars" style="margin-bottom:0;">
+                                @for ($i = 0; $i < 5; $i++)
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="{{ $i < $review->rating ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="1.5"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                                @endfor
+                            </div>
+                        </div>
+                    </div>
+                    <p class="testimonial-excerpt">&ldquo;{{ \Illuminate\Support\Str::limit($review->review, 140) }}&rdquo;</p>
+                    <p class="testimonial-product">{{ $review->product->name }}</p>
+                </a>
+            @endforeach
+        </div>
+    @endif
 </section>
 
 
