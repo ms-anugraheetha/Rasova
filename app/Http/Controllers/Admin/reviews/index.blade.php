@@ -74,12 +74,7 @@
                             <span>{{ $review->product->name ?? 'N/A' }}</span>
                         </div>
                     </td>
-                    <td>
-                        {{ $review->internal_reviewer_name }}
-                        @if ($review->is_anonymous)
-                            <span class="admin-badge" style="background:var(--color-accent-2-100);">Posted anonymously</span>
-                        @endif
-                    </td>
+                    <td>{{ $review->reviewer_name }}</td>
                     <td class="admin-stars-inline">{{ str_repeat('★', $review->rating) }}{{ str_repeat('☆', 5 - $review->rating) }}</td>
                     <td class="admin-review-text">{{ $review->review }}</td>
                     <td><span class="admin-badge {{ $review->status }}">{{ ucfirst($review->status) }}</span></td>

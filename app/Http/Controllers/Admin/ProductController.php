@@ -1,141 +1,111 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductImage;
-use App\Models\ProductVariant;
+use App\Models\Review;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'variants']);
+        $query = Product::query()
+            ->where('is_available', true)
+            ->with(['category', 'variants' => function ($q) {
+                $q->where('is_active', true)->orderBy('price_minor');
+            }])
+            ->withCount(['reviews as review_count' => function ($q) {
+                $q->where('status', 'approved')->where('is_hidden', false);
+            }]);
 
+        // Category filter
+        if ($request->filled('category')) {
+            $query->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->input('category'));
+            });
+        }
+
+        // Search by name
         if ($request->filled('search')) {
             $query->where('name', 'ilike', '%' . $request->input('search') . '%');
         }
 
-        $products = $query->latest()->paginate(20)->withQueryString();
+        // Sorting
+        $sort = $request->input('sort', 'newest');
+        match ($sort) {
+            'name_asc' => $query->orderBy('name', 'asc'),
+            'name_desc' => $query->orderBy('name', 'desc'),
+            'price_asc' => $query->orderBy(
+                \App\Models\ProductVariant::select('price_minor')
+                    ->whereColumn('product_id', 'products.id')
+                    ->orderBy('price_minor')
+                    ->limit(1)
+            ),
+            'price_desc' => $query->orderByDesc(
+                \App\Models\ProductVariant::select('price_minor')
+                    ->whereColumn('product_id', 'products.id')
+                    ->orderBy('price_minor')
+                    ->limit(1)
+            ),
+            default => $query->latest(),
+        };
 
-        return view('admin.products.index', compact('products'));
+        $products = $query->paginate(12)->withQueryString();
+        $categories = Category::where('status', true)->orderBy('sort_order')->get();
+
+        $wishlistedProductIds = auth()->check()
+            ? \App\Models\WishlistItem::whereHas('wishlist', fn ($q) => $q->where('user_id', auth()->id()))
+                ->pluck('product_id')
+                ->flip()
+            : collect();
+
+        return view('products.index', compact('products', 'categories', 'wishlistedProductIds'));
     }
 
-    public function create()
+    public function show(string $slug, Request $request)
     {
-        $categories = Category::orderBy('name')->get();
+        $product = Product::where('slug', $slug)
+            ->where('is_available', true)
+            ->with([
+                'category',
+                'variants' => fn ($q) => $q->where('is_active', true)->orderBy('price_minor'),
+                'images' => fn ($q) => $q->orderBy('sort_order'),
+            ])
+            ->firstOrFail();
 
-        return view('admin.products.create', compact('categories'));
-    }
+        $reviews = $product->reviews()
+            ->visible()
+            ->with(['user', 'images', 'reply.admin'])
+            ->withCount('helpfulVotes')
+            ->latest()
+            ->paginate(5, ['*'], 'reviews_page');
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_available' => 'boolean',
-            'weight' => 'required|string|max:50',
-            'price' => 'required|numeric|min:0',
-            'stock_quantity' => 'required|integer|min:0',
-            'image' => 'nullable|image|max:4096',
-        ]);
+        $ratingBreakdown = $product->ratingBreakdown();
 
-        $product = Product::create([
-            'category_id' => $validated['category_id'],
-            'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']) . '-' . Str::random(6),
-            'description' => $validated['description'] ?? null,
-            'is_available' => $request->boolean('is_available'),
-        ]);
-
-        ProductVariant::create([
-            'product_id' => $product->id,
-            'weight' => $validated['weight'],
-            'price_minor' => (int) round($validated['price'] * 100),
-            'stock_quantity' => $validated['stock_quantity'],
-            'sku' => strtoupper(Str::slug($validated['name'], '')) . '-' . strtoupper(Str::random(6)),
-            'is_active' => true,
-        ]);
-
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-
-            ProductImage::create([
-                'product_id' => $product->id,
-                'image' => $path,
-                'is_primary' => true,
-                'sort_order' => 1,
-            ]);
+        $userReview = null;
+        if ($request->user()) {
+            $userReview = Review::where('product_id', $product->id)
+                ->where('user_id', $request->user()->id)
+                ->first();
         }
 
-        return redirect()->route('admin.products.edit', $product->id)->with('success', 'Product created.');
-    }
+        $helpfulVoteIds = $request->user()
+            ? \App\Models\ReviewHelpfulVote::where('user_id', $request->user()->id)
+                ->whereIn('review_id', $reviews->pluck('id'))
+                ->pluck('review_id')
+                ->flip()
+            : collect();
 
-    public function edit(Product $product)
-    {
-        $categories = Category::orderBy('name')->get();
-        $product->load(['variants', 'images']);
+        $inWishlist = $request->user()
+            ? \App\Models\WishlistItem::where('product_id', $product->id)
+                ->whereHas('wishlist', fn ($q) => $q->where('user_id', $request->user()->id))
+                ->exists()
+            : false;
 
-        return view('admin.products.edit', compact('product', 'categories'));
-    }
-
-    public function update(Request $request, Product $product)
-    {
-        $validated = $request->validate([
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_available' => 'boolean',
-        ]);
-
-        $product->update([
-            'category_id' => $validated['category_id'],
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
-            'is_available' => $request->boolean('is_available'),
-        ]);
-
-        return back()->with('success', 'Product updated.');
-    }
-
-    public function destroy(Product $product)
-    {
-        $product->delete();
-
-        return redirect()->route('admin.products.index')->with('success', 'Product deleted.');
-    }
-
-    public function uploadImage(Request $request, Product $product)
-    {
-        $request->validate([
-            'image' => 'required|image|max:4096',
-        ]);
-
-        $path = $request->file('image')->store('products', 'public');
-
-        $isFirstImage = $product->images()->count() === 0;
-
-        ProductImage::create([
-            'product_id' => $product->id,
-            'image' => $path,
-            'is_primary' => $isFirstImage,
-            'sort_order' => $product->images()->count() + 1,
-        ]);
-
-        return back()->with('success', 'Image uploaded.');
-    }
-
-    public function deleteImage(ProductImage $image)
-    {
-        Storage::disk('public')->delete($image->image);
-        $image->delete();
-
-        return back()->with('success', 'Image removed.');
+        return view('products.show', compact(
+            'product', 'reviews', 'ratingBreakdown', 'userReview', 'helpfulVoteIds', 'inWishlist'
+        ));
     }
 }

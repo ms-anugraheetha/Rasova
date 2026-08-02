@@ -89,6 +89,20 @@
 
 /* Write/edit review form */
 .write-review-block { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--color-divider); max-width: 520px; }
+.write-review-block #openReviewFormBtn { min-height: 44px; padding: 0 24px; }
+.write-review-block #openReviewFormBtn.js-hidden { display: none; }
+.review-form-collapsible {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+.review-form-collapsible.open { opacity: 1; }
+.review-form-inner { padding-top: 4px; }
+.review-anon-check {
+    display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 12px; cursor: pointer;
+}
+.review-anon-check input { width: 16px; height: 16px; }
+.review-form-actions { display: flex; gap: 10px; align-items: center; }
 .write-review-block h3 { font-size: 16px; margin: 0 0 14px; }
 .review-star-picker { display: flex; gap: 6px; margin-bottom: 14px; }
 .review-star-btn { background: none; border: none; padding: 0; cursor: pointer; color: var(--color-star); opacity: 0.35; }
@@ -254,14 +268,9 @@
         @foreach ($reviews as $review)
             <div class="review-item" id="review-{{ $review->id }}">
                 <div class="review-header-row">
-                    <img src="{{ $review->user->avatar_url }}" alt="{{ $review->user->full_name }}" class="review-avatar">
+                    <img src="{{ $review->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($review->reviewer_name) . '&background=b3132d&color=fff' }}" alt="{{ $review->reviewer_name }}" class="review-avatar">
                     <div class="review-name-col">
-                        <h4>
-                            {{ $review->user->full_name }}
-                            @if ($review->verified_purchase)
-                                <span class="verified-badge">Verified Purchase</span>
-                            @endif
-                        </h4>
+                        <h4>{{ $review->reviewer_name }}</h4>
                         <div class="review-stars" style="margin-bottom:0;">
                             @for ($i = 0; $i < 5; $i++)
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="{{ $i < $review->rating ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="1.5"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
@@ -318,14 +327,28 @@
     @endif
 
     <div class="write-review-block">
-        @auth
-            @if (! $userHasDeliveredPurchase)
-                <p style="font-size:14px;opacity:0.7;">You can review this product once your order has been delivered.</p>
-            @else
-                <h3>{{ $userReview ? 'Update your review' : 'Write a review' }}</h3>
-                <form method="POST" action="{{ route('reviews.store', $product->id) }}" id="reviewForm" enctype="multipart/form-data">
+        <button type="button" class="btn btn-secondary" id="openReviewFormBtn">{{ $userReview ? 'Update your review' : 'Write a Review' }}</button>
+
+        <div class="review-form-collapsible" id="reviewFormWrapper">
+            <div class="review-form-inner">
+                <h3>{{ $userReview ? 'Update your review' : 'Write a Review' }}</h3>
+                <form method="POST" action="{{ route('reviews.store', $product->id) }}" id="reviewForm">
                     @csrf
                     <input type="hidden" name="rating" id="reviewRatingInput" value="{{ $userReview->rating ?? '' }}">
+
+                    @guest
+                        <input type="text" name="guest_name" class="review-title-input" placeholder="Your name" value="{{ old('guest_name') }}" required maxlength="150">
+                    @endguest
+
+                    <label class="review-anon-check">
+                        <input type="checkbox" name="is_anonymous" value="1" {{ old('is_anonymous', $userReview->is_anonymous ?? false) ? 'checked' : '' }}>
+                        Post as Anonymous
+                    </label>
+
+                    @guest
+                        <input type="email" name="guest_email" class="review-title-input" placeholder="Your email (optional)" value="{{ old('guest_email') }}" maxlength="255">
+                    @endguest
+
                     <div class="review-star-picker" id="reviewStarPicker">
                         @for ($i = 1; $i <= 5; $i++)
                             <button type="button" class="review-star-btn {{ ($userReview->rating ?? 0) >= $i ? 'filled' : '' }}" data-value="{{ $i }}" aria-label="Rate {{ $i }} stars">
@@ -334,23 +357,18 @@
                         @endfor
                     </div>
 
-                    <input type="text" name="title" class="review-title-input" placeholder="Review title (optional)" value="{{ old('title', $userReview->title ?? '') }}" maxlength="150">
                     <textarea name="review" class="review-textarea" placeholder="What did you think of this product?" required>{{ old('review', $userReview->review ?? '') }}</textarea>
 
-                    <input type="file" name="images[]" id="reviewImages" class="review-image-input" accept="image/*" multiple>
-                    <div class="review-image-preview-row" id="reviewImagePreview"></div>
-
-                    <button type="submit" class="btn btn-primary" style="min-height:44px;padding:0 24px;">{{ $userReview ? 'Update review' : 'Submit review' }}</button>
+                    <div class="review-form-actions">
+                        <button type="submit" class="btn btn-primary" style="min-height:44px;padding:0 24px;">Submit Review</button>
+                        <button type="button" class="btn btn-secondary" id="cancelReviewFormBtn" style="min-height:44px;padding:0 24px;">Cancel</button>
+                    </div>
                     @if ($userReview && $userReview->status === 'pending')
                         <p style="font-size:12px;opacity:0.6;margin-top:8px;">Your review is awaiting approval.</p>
                     @endif
                 </form>
-            @endif
-        @else
-            <p style="font-size:14px;opacity:0.7;">
-                <a href="{{ route('login') }}">Log in</a> to write a review.
-            </p>
-        @endauth
+            </div>
+        </div>
     </div>
 </div>
 
@@ -391,21 +409,29 @@
             }
         });
 
-        // Live thumbnail preview for selected review images
-        var imageInput = document.getElementById('reviewImages');
-        var previewRow = document.getElementById('reviewImagePreview');
-        imageInput && imageInput.addEventListener('change', function () {
-            previewRow.innerHTML = '';
-            Array.from(imageInput.files).slice(0, 5).forEach(function (file) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    var img = document.createElement('img');
-                    img.src = e.target.result;
-                    previewRow.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            });
-        });
+        // Collapsible form toggle
+        var openBtn = document.getElementById('openReviewFormBtn');
+        var wrapper = document.getElementById('reviewFormWrapper');
+        var cancelBtn = document.getElementById('cancelReviewFormBtn');
+        var form = document.getElementById('reviewForm');
+
+        function openForm() {
+            openBtn.classList.add('js-hidden');
+            wrapper.classList.add('open');
+            wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
+        }
+
+        function closeForm() {
+            wrapper.style.maxHeight = '0px';
+            wrapper.classList.remove('open');
+            openBtn.classList.remove('js-hidden');
+            form.reset();
+            input.value = '';
+            highlight(0);
+        }
+
+        openBtn.addEventListener('click', openForm);
+        cancelBtn.addEventListener('click', closeForm);
     })();
 
     // Thumbnail gallery swap

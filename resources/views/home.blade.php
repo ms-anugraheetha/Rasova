@@ -21,16 +21,19 @@
 .cat-card:hover .cat-circle { transform: translateY(-4px); box-shadow: var(--shadow-sm); }
 .cat-card:hover .cat-circle img { transform: scale(1.08); }
 
-.hero-section { position: relative; padding: 28px 0 48px; }
-.hero-grid { display: flex; flex-direction: column; gap: 28px; }
+.hero-section { position: relative; padding: 0 0 48px; }
+.hero-banner { width: 100%; aspect-ratio: 1/1; overflow: hidden; }
+.hero-banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero-copy { text-align: center; padding-top: 28px; }
 .hero-copy h1 { font-size: clamp(32px, 8vw, 60px); line-height: 1.08; margin: 16px 0; }
-.hero-copy p { font-size: clamp(15px, 3.6vw, 17px); opacity: 0.78; margin-bottom: 22px; max-width: 46ch; }
-.hero-actions { display: flex; flex-direction: column; gap: 12px; }
-.hero-actions .btn { width: 100%; min-height: 48px; font-size: 15px; }
+.hero-copy p { font-size: clamp(15px, 3.6vw, 17px); opacity: 0.78; margin: 0 auto 22px; max-width: 46ch; }
+.hero-actions { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.hero-actions .btn { width: 100%; max-width: 320px; min-height: 48px; font-size: 15px; }
 
 .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
 .section-head h2 { font-size: clamp(22px, 5vw, 30px); margin: 0; }
 .section-head a { font-size: 14px; white-space: nowrap; }
+.bestseller-placeholder-note { font-size: 13px; opacity: 0.6; margin: -8px 0 20px; max-width: 56ch; }
 
 .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .best-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
@@ -59,6 +62,17 @@
 .testimonial-product { font-size: 12px; opacity: 0.55; margin: 0 !important; }
 .verified-badge { font-size: 10px; background: var(--color-accent-2-100); padding: 1px 7px; border-radius: 6px; margin-left: 4px; }
 
+.reviews-empty-state { text-align: center; padding: 48px 20px; background: var(--color-surface); border-radius: 20px; }
+.reviews-empty-icon { color: var(--color-accent-700); opacity: 0.5; margin-bottom: 16px; }
+.reviews-empty-state h3 { font-size: 18px; margin: 0 0 8px; }
+.reviews-empty-state p { font-size: 14px; opacity: 0.68; max-width: 44ch; margin: 0 auto; line-height: 1.6; }
+
+.about-cta-section { padding: 64px 0; text-align: center; }
+.about-cta-section h2 { font-size: clamp(26px, 6vw, 38px); margin: 0 0 14px; }
+.about-cta-section p { font-size: 15px; opacity: 0.72; max-width: 46ch; margin: 0 auto 28px; }
+.about-cta-actions { display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 0 auto; }
+.about-cta-actions .btn { min-height: 48px; }
+
 .newsletter-section { background: var(--color-accent-2-100); padding: 40px 0; }
 .newsletter-row { display: flex; flex-direction: column; gap: 20px; }
 .newsletter-row h3 { font-size: clamp(19px, 4.5vw, 25px); margin: 0 0 6px; }
@@ -67,8 +81,10 @@
 
 /* ===== TABLET — min-width 768px ===== */
 @media (min-width: 768px) {
-    .hero-section { padding: 40px 0 64px; }
-    .hero-actions { flex-direction: row; }
+    .hero-section { padding: 0 0 64px; }
+    .hero-banner { aspect-ratio: 16/9; }
+    .hero-copy { padding-top: 40px; }
+    .hero-actions { flex-direction: row; justify-content: center; }
     .hero-actions .btn { width: auto; }
     .cat-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
     .best-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -76,13 +92,15 @@
     .testimonial-grid { grid-template-columns: repeat(2, 1fr); }
     .newsletter-row { flex-direction: row; justify-content: space-between; align-items: center; }
     .newsletter-form { flex-direction: row; max-width: 420px; flex: 1; min-width: 280px; }
+    .about-cta-actions { flex-direction: row; max-width: none; justify-content: center; }
+    .about-cta-actions .btn { min-width: 180px; }
 }
 
 /* ===== DESKTOP — min-width 1024px ===== */
 @media (min-width: 1024px) {
-    .hero-section { padding: 56px 0 88px; }
-    .hero-grid { flex-direction: row; align-items: center; gap: 56px; }
-    .hero-copy, .hero-figure { flex: 1; }
+    .hero-section { padding: 0 0 88px; }
+    .hero-banner { aspect-ratio: 21/9; }
+    .hero-copy { padding-top: 48px; }
     .best-grid { grid-template-columns: repeat(4, 1fr); gap: 24px; }
     .testimonial-grid { grid-template-columns: repeat(3, 1fr); }
     .story-section, .quote-section { padding-bottom: 88px; }
@@ -92,23 +110,22 @@
 
 @section('content')
 
-<section class="wrap hero-section">
-    <div class="hero-grid">
-        <div class="hero-copy">
-            <span class="tag tag-accent"> Kerala, since 2023</span>
-            <h1>Homemade Kerala pickles, Made Fresh with love.</h1>
-            <p> Prepared fresh after every order, with no preservatives and no shortcuts.</p>
-            <div class="hero-actions">
-                <a href="{{ route('products.index') }}" class="btn btn-primary">
-                    Shop the collection
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-                </a>
-                <a href="#story" class="btn btn-ghost">Our story</a>
-            </div>
+<section class="hero-section">
+    <figure class="hero-banner" style="margin:0;">
+        <img src="{{ asset('design/hero-jar-1.png') }}" alt="Jars of Rasova pickle on a warm surface">
+    </figure>
+
+    <div class="wrap hero-copy">
+        <span class="tag tag-accent">Kerala, since 2023</span>
+        <h1>Homemade Kerala pickles, Made Fresh with love.</h1>
+        <p>Prepared fresh after every order, with no preservatives and no shortcuts.</p>
+        <div class="hero-actions">
+            <a href="{{ route('products.index') }}" class="btn btn-primary">
+                Shop the collection
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </a>
+            <a href="{{ route('about') }}" class="btn btn-ghost">Our story</a>
         </div>
-        <figure class="washed hero-figure" style="margin:0;border-radius:24px;overflow:hidden;">
-            <img src="{{ asset('design/hero-jar.png') }}" alt="Jars of Rasova pickle on a warm surface" style="width:100%;aspect-ratio:4/5;object-fit:cover;">
-        </figure>
     </div>
 </section>
 
@@ -131,9 +148,12 @@
 
 <section class="wrap" style="padding-bottom:56px;">
     <div class="section-head">
-        <h2>Bestsellers</h2>
+        <h2>Best Sellers</h2>
         <a href="{{ route('products.index') }}">View all </a>
     </div>
+    @if ($showBestsellerPlaceholder ?? false)
+        <p class="bestseller-placeholder-note">Our best sellers will appear here as customers start placing orders. Until then, discover our handcrafted homemade Kerala pickles.</p>
+    @endif
     <div class="best-grid">
         @foreach($bestsellers as $product)
             <div class="pcard">
@@ -173,38 +193,20 @@
     </div>
 </section>
 
-<section class="wrap story-section" id="story">
-    <div class="story-grid">
-        <figure class="washed">
-            <img src="{{ asset('design/story-photo.png') }}" alt="Hands packing pickle jars" style="width:100%;aspect-ratio:4/5;object-fit:cover;">
-        </figure>
-        <div>
-            <span class="tag tag-accent-2">Our story</span>
-            <h2>A kitchen in Kerala, not a factory.</h2>
-            <p>Every business has a beginning. Ours started with a family recipe and a few curious friends. One taste led to another, and soon we were making pickles for more than just ourselves. We still prepare every order by hand, with ingredients we’d feed our own family.</p>
-            <div class="story-stats">
-                <div><p>0</p><p>Preservatives</p></div>
-                <div><p>100%</p><p>Handmade</p></div>
-            </div>
-        </div>
+<section class="wrap quote-section" id="reviews">
+    <div class="section-head">
+        <h2>Customer Reviews</h2>
+        <a href="{{ route('products.index') }}">View all reviews </a>
     </div>
-</section>
 
-<section class="wrap quote-section">
     @if ($testimonials->isNotEmpty())
-        <h2 style="font-size:clamp(22px, 5vw, 30px); margin: 0 0 24px;">What customers are saying</h2>
         <div class="testimonial-grid">
             @foreach ($testimonials as $review)
                 <a href="{{ route('products.show', $review->product->slug) }}#review-{{ $review->id }}" class="testimonial-card">
                     <div class="testimonial-head">
-                        <img src="{{ $review->user->avatar_url }}" alt="{{ $review->user->full_name }}" class="testimonial-avatar">
+                        <img src="{{ $review->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($review->reviewer_name) . '&background=b3132d&color=fff' }}" alt="{{ $review->reviewer_name }}" class="testimonial-avatar">
                         <div>
-                            <p class="testimonial-name">
-                                {{ $review->user->full_name }}
-                                @if ($review->verified_purchase)
-                                    <span class="verified-badge">Verified</span>
-                                @endif
-                            </p>
+                            <p class="testimonial-name">{{ $review->reviewer_name }}</p>
                             <div class="review-stars" style="margin-bottom:0;">
                                 @for ($i = 0; $i < 5; $i++)
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="{{ $i < $review->rating ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="1.5"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
@@ -217,9 +219,27 @@
                 </a>
             @endforeach
         </div>
+    @else
+        <div class="reviews-empty-state">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="reviews-empty-icon">
+                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path>
+            </svg>
+            <h3>Customer Reviews</h3>
+            <p>We're excited to hear what you think! Our first customer reviews will appear here once orders are delivered and customers share their experiences.</p>
+        </div>
     @endif
 </section>
 
+<section class="about-cta-section">
+    <div class="wrap">
+        <h2>Bring Kerala Home.</h2>
+        <p>Experience authentic homemade Kerala pickles prepared fresh for every order.</p>
+        <div class="about-cta-actions">
+            <a href="{{ route('products.index') }}" class="btn btn-primary">Shop Collection</a>
+            <a href="{{ route('contact') }}" class="btn btn-secondary">Contact Us</a>
+        </div>
+    </div>
+</section>
 
 @endsection
 

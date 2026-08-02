@@ -15,7 +15,7 @@ class Review extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'product_id', 'order_id', 'rating', 'title', 'review',
+        'user_id', 'guest_name', 'guest_email', 'is_anonymous', 'product_id', 'order_id', 'rating', 'title', 'review',
         'verified_purchase', 'legacy_review', 'status', 'is_hidden', 'approved_by', 'approved_at',
     ];
 
@@ -25,6 +25,7 @@ class Review extends Model
             'verified_purchase' => 'boolean',
             'legacy_review' => 'boolean',
             'is_hidden' => 'boolean',
+            'is_anonymous' => 'boolean',
             'approved_at' => 'datetime',
         ];
     }
@@ -62,6 +63,28 @@ class Review extends Model
     public function reply(): HasOne
     {
         return $this->hasOne(ReviewReply::class);
+    }
+
+    /**
+     * Public display name — "Anonymous" if the reviewer chose to hide their
+     * name, otherwise their account name or the name they typed as a guest.
+     */
+    public function getReviewerNameAttribute(): string
+    {
+        if ($this->is_anonymous) {
+            return 'Anonymous';
+        }
+
+        return $this->user?->full_name ?? $this->guest_name ?? 'Anonymous';
+    }
+
+    /**
+     * The real name behind the review, regardless of the anonymous setting —
+     * for admin reference only. Never expose this in public-facing views.
+     */
+    public function getInternalReviewerNameAttribute(): string
+    {
+        return $this->user?->full_name ?? $this->guest_name ?? 'Unknown';
     }
 
     /**

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Review;
+use App\Models\WishlistItem;
 use App\Services\CartResolver;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,19 +17,13 @@ class HomeController extends Controller
     {
         $categories = Category::where('status', true)->orderBy('sort_order')->get();
 
-        $bestsellers = Product::query()
-            ->where('is_available', true)
-            ->where('best_seller', true)
-            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('price_minor'), 'images'])
-            ->withCount(['reviews as review_count' => fn ($q) => $q->where('status', 'approved')->where('is_hidden', false)])
-            ->take(4)
-            ->get();
+        [$bestsellers, $showBestsellerPlaceholder] = $this->resolveBestsellers();
 
         $cart = $cartResolver->resolve($request);
         $cartCount = $cart->items()->sum('quantity');
 
         $wishlistedProductIds = auth()->check()
-            ? \App\Models\WishlistItem::whereHas('wishlist', fn ($q) => $q->where('user_id', auth()->id()))
+            ? WishlistItem::whereHas('wishlist', fn ($q) => $q->where('user_id', auth()->id()))
                 ->pluck('product_id')
                 ->flip()
             : collect();
@@ -35,45 +31,95 @@ class HomeController extends Controller
         return view('home', [
             'categories' => $categories,
             'bestsellers' => $bestsellers,
+            'showBestsellerPlaceholder' => $showBestsellerPlaceholder,
             'footerCategories' => $categories,
             'cartCount' => $cartCount,
-            'testimonials' => $this->selectTestimonials(),
+            'testimonials' => $this->latestFeaturedReviews(),
             'wishlistedProductIds' => $wishlistedProductIds,
         ]);
     }
 
     /**
-     * Picks 3–5 real reviews to feature on the homepage — weighted toward
-     * highly-rated verified reviews, with a couple of other authentic ones
-     * mixed in for variety. Randomized on every load (no caching), so a
-     * page reload genuinely shows a different set, per spec.
+     * Real best sellers, calculated from completed (paid) orders — ranked by
+     * total quantity sold, then by number of distinct orders. If the store
+     * has no completed orders yet, falls back to the latest 4 available
+     * products and flags the view to show an honest "coming soon" note
+     * instead of faking sales data.
      */
-    protected function selectTestimonials()
+    protected function resolveBestsellers(): array
     {
-        $count = random_int(3, 5);
-        $featuredCount = max(1, $count - 1); // leave at least one slot for "other authentic" reviews
+        $productLoads = [
+            'variants' => fn ($q) => $q->where('is_active', true)->orderBy('price_minor'),
+            'images',
+        ];
+        $reviewCountLoad = ['reviews as review_count' => fn ($q) => $q->where('status', 'approved')->where('is_hidden', false)];
 
-        $featured = Review::visible()
-            ->where('verified_purchase', true)
-            ->where('rating', '>=', 4)
-            ->with(['user', 'product'])
-            ->inRandomOrder()
-            ->take($featuredCount)
+        $rankedProductIds = OrderItem::query()
+            ->select('product_id')
+            ->selectRaw('SUM(quantity) as total_quantity')
+            ->selectRaw('COUNT(DISTINCT order_id) as order_count')
+            ->whereHas('order', fn ($q) => $q->where('payment_status', 'paid'))
+            ->groupBy('product_id')
+            ->orderByDesc('total_quantity')
+            ->orderByDesc('order_count')
+            ->take(4)
+            ->pluck('product_id');
+
+        if ($rankedProductIds->isNotEmpty()) {
+            $products = Product::whereIn('id', $rankedProductIds)
+                ->where('is_available', true)
+                ->with($productLoads)
+                ->withCount($reviewCountLoad)
+                ->get();
+
+            // Re-order to match the ranking, since whereIn() doesn't preserve it.
+            $ordered = $rankedProductIds
+                ->map(fn ($id) => $products->firstWhere('id', $id))
+                ->filter()
+                ->values();
+
+            if ($ordered->isNotEmpty()) {
+                return [$ordered, false];
+            }
+        }
+
+        $fallback = Product::where('is_available', true)
+            ->with($productLoads)
+            ->withCount($reviewCountLoad)
+            ->latest()
+            ->take(4)
             ->get();
 
-        $remaining = $count - $featured->count();
+        return [$fallback, true];
+    }
 
-        if ($remaining > 0) {
+    /**
+     * The latest 3 reviews to feature on the homepage — prioritizing
+     * highly-rated reviews when there are enough of them, falling back to
+     * the most recent visible reviews overall otherwise.
+     */
+    protected function latestFeaturedReviews()
+    {
+        $featured = Review::visible()
+            ->where('rating', '>=', 4)
+            ->with(['user', 'product'])
+            ->latest()
+            ->take(3)
+            ->get();
+
+        if ($featured->count() < 3) {
+            $remaining = 3 - $featured->count();
+
             $filler = Review::visible()
                 ->whereNotIn('id', $featured->pluck('id'))
                 ->with(['user', 'product'])
-                ->inRandomOrder()
+                ->latest()
                 ->take($remaining)
                 ->get();
 
-            $featured = $featured->merge($filler);
+            $featured = $featured->merge($filler)->sortByDesc('created_at')->values();
         }
 
-        return $featured->shuffle();
+        return $featured;
     }
 }
