@@ -41,6 +41,8 @@
             background: var(--color-accent); color: #fff; border: 1.5px solid #fff;
             font-size: 11px; font-weight: 700; line-height: 1;
             display: flex; align-items: center; justify-content: center;
+        }
+        .badge.badge-changed {
             animation: badge-pop 0.3s ease;
         }
         @keyframes badge-pop {
@@ -192,7 +194,7 @@
         <a href="{{ route('cart.index') }}" class="icon-btn" title="Cart">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
             @if(($cartCount ?? 0) > 0)
-                <span class="badge">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
+                <span class="badge" data-cart-badge data-count="{{ $cartCount }}">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
             @endif
         </a>
 
@@ -267,7 +269,7 @@
         <span style="position:relative;display:inline-block;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path></svg>
             @if(($cartCount ?? 0) > 0)
-                <span class="badge" style="top:-6px;right:-8px;">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
+                <span class="badge" style="top:-6px;right:-8px;" data-cart-badge data-count="{{ $cartCount }}">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
             @endif
         </span>
         Cart
@@ -467,6 +469,25 @@
                 }
             }
         });
+    })();
+
+    // Cart badge: only animate when the count has actually changed since
+    // the last page load — otherwise every navigation would replay the
+    // pop animation, even when the cart hasn't changed at all.
+    (function () {
+        var badges = document.querySelectorAll('[data-cart-badge]');
+        if (!badges.length) return;
+
+        var currentCount = badges[0].getAttribute('data-count');
+        var lastCount = localStorage.getItem('rasova_cart_count');
+
+        if (lastCount !== null && lastCount !== currentCount) {
+            badges.forEach(function (badge) {
+                badge.classList.add('badge-changed');
+            });
+        }
+
+        localStorage.setItem('rasova_cart_count', currentCount);
     })();
 </script>
 

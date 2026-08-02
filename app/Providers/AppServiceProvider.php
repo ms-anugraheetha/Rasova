@@ -1,23 +1,29 @@
 <?php
 
-namespace App\View\Composers;
+namespace App\Providers;
 
-use App\Services\CartResolver;
-use Illuminate\Http\Request;
-use Illuminate\View\View;
+use App\View\Composers\CartComposer;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
 
-class CartComposer
+class AppServiceProvider extends ServiceProvider
 {
-    public function __construct(
-        protected CartResolver $cartResolver,
-        protected Request $request,
-    ) {
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        //
     }
 
-    public function compose(View $view): void
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
     {
-        $cart = $this->cartResolver->resolve($this->request);
-
-        $view->with('cartCount', $cart->items()->sum('quantity'));
+        // Every page using the storefront layout gets an accurate cart item
+        // count automatically — no need for each controller to remember to
+        // pass it individually (which was the bug: only HomeController did).
+        View::composer('layouts.storefront', CartComposer::class);
     }
 }
