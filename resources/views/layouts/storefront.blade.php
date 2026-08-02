@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Rasova — Homemade Kerala Pickles')</title>
 
@@ -39,6 +40,29 @@
             border-radius: 50%; background: var(--color-accent); color: var(--color-bg);
             font-size: 9px; display: grid; place-items: center; font-weight: 700;
         }
+
+        /* Profile dropdown */
+        .profile-dropdown {
+            position: absolute; right: 0; top: 52px; min-width: 200px;
+            background: var(--color-bg); border: 1px solid var(--color-divider);
+            border-radius: 14px; box-shadow: var(--shadow-lg); overflow: hidden; z-index: 70;
+            display: flex; flex-direction: column; padding: 6px;
+            opacity: 0; visibility: hidden; transform: translateY(-6px) scale(0.98);
+            transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+        }
+        .profile-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        .profile-dropdown a, .profile-dropdown .profile-dropdown-soon, .profile-dropdown .profile-dropdown-logout {
+            display: block; padding: 10px 12px; font-size: 14px; color: var(--color-text);
+            border-radius: 8px; text-align: left; width: 100%; background: none; border: none;
+            cursor: pointer; font-family: inherit;
+        }
+        .profile-dropdown a:hover, .profile-dropdown .profile-dropdown-logout:hover {
+            background: color-mix(in srgb, var(--color-text) 6%, transparent);
+        }
+        .profile-dropdown .profile-dropdown-soon { color: var(--color-text); opacity: 0.4; cursor: default; }
+        .profile-dropdown-divider { height: 1px; background: var(--color-divider); margin: 6px 4px; }
+        .profile-dropdown-admin { color: var(--color-accent-700); font-weight: 600; }
+        .profile-dropdown-logout { color: var(--color-error, #b3132d); }
 
         /* Top nav: on mobile only logo + icons show; link list lives in the hamburger drawer */
         .site-nav {
@@ -121,9 +145,29 @@
         </a>
 
         @auth
-            <a href="{{ route('profile.edit') }}" class="icon-btn" title="Account">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            </a>
+            <div style="position:relative;">
+                <button type="button" class="icon-btn" title="Account" id="profileMenuBtn" style="border:none;background:none;cursor:pointer;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </button>
+                <div id="profileMenu" class="profile-dropdown">
+                    <a href="{{ route('profile.edit') }}">My Profile</a>
+                    <a href="{{ route('orders.index') }}">My Orders</a>
+                    <span class="profile-dropdown-soon" title="Coming soon">Saved Addresses</span>
+                    <a href="{{ route('wishlist.index') }}">Wishlist</a>
+                    @if (auth()->user()->is_admin)
+                        <div class="profile-dropdown-divider"></div>
+                        <a href="{{ route('admin.dashboard') }}" class="profile-dropdown-admin">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" style="margin-right:6px;vertical-align:-2px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg>
+                            Admin Panel
+                        </a>
+                    @endif
+                    <div class="profile-dropdown-divider"></div>
+                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                        @csrf
+                        <button type="submit" class="profile-dropdown-logout">Logout</button>
+                    </form>
+                </div>
+            </div>
         @else
             <div style="position:relative;">
                 <button type="button" class="icon-btn" title="Guest Mode" id="guestModeBtn" style="border:none;background:none;cursor:pointer;">
@@ -235,6 +279,23 @@
         });
         document.addEventListener('click', function () {
             guestMenu.style.display = 'none';
+        });
+    })();
+
+    (function () {
+        var profileBtn = document.getElementById('profileMenuBtn');
+        var profileMenu = document.getElementById('profileMenu');
+        if (!profileBtn || !profileMenu) return;
+
+        profileBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            profileMenu.classList.toggle('open');
+        });
+        document.addEventListener('click', function () {
+            profileMenu.classList.remove('open');
+        });
+        profileMenu.addEventListener('click', function (e) {
+            e.stopPropagation();
         });
     })();
 </script>

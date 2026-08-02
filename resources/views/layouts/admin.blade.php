@@ -86,7 +86,7 @@
             <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">Products</a>
         </nav>
         <div class="admin-nav-footer">
-            <a href="{{ route('products.index') }}">&larr; Back to store</a>
+            <a href="{{ route('products.index') }}"> Back to store</a>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit">Log out</button>

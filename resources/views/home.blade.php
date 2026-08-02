@@ -10,12 +10,16 @@
 .pcard-wish {
     position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 50%;
     background: var(--color-bg); display: grid; place-items: center; box-shadow: var(--shadow-sm);
-    cursor: pointer; color: var(--color-text);
+    cursor: pointer; color: var(--color-text); border: none; padding: 0; text-decoration: none;
 }
 .pcard-wish:hover { color: var(--color-accent); }
+.pcard-wish.active { color: var(--color-accent); }
 .stars { display: inline-flex; gap: 2px; color: var(--color-star); align-items: center; }
-.cat-circle { aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--color-accent-2-100); }
-.cat-circle img { width: 100%; height: 100%; object-fit: cover; }
+.cat-circle { aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--color-accent-2-100); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.cat-circle img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+.cat-card { text-align: center; text-decoration: none; color: inherit; display: block; }
+.cat-card:hover .cat-circle { transform: translateY(-4px); box-shadow: var(--shadow-sm); }
+.cat-card:hover .cat-circle img { transform: scale(1.08); }
 
 .hero-section { position: relative; padding: 28px 0 48px; }
 .hero-grid { display: flex; flex-direction: column; gap: 28px; }
@@ -89,7 +93,6 @@
 @section('content')
 
 <section class="wrap hero-section">
-    <div style="position:absolute;right:-160px;top:-80px;width:420px;height:420px;border-radius:50%;background:var(--color-accent-2-200);z-index:-1;opacity:0.7;"></div>
     <div class="hero-grid">
         <div class="hero-copy">
             <span class="tag tag-accent"> Kerala, since 2023</span>
@@ -116,9 +119,9 @@
     </div>
     <div class="cat-grid">
         @foreach($categories as $category)
-            <a href="{{ route('products.index', ['category' => $category->slug]) }}" style="text-align:center;text-decoration:none;color:inherit;">
+            <a href="{{ route('products.index', ['category' => $category->slug]) }}" class="cat-card">
                 <div class="cat-circle">
-                    <img src="{{ $category->image_url ?? asset('design/placeholder-category.jpg') }}" alt="{{ $category->name }}">
+                    <img src="{{ $category->image_url }}" alt="{{ $category->name }}">
                 </div>
                 <p style="margin:10px 0 0;font-weight:600;font-size:14px;">{{ $category->name }}</p>
             </a>
@@ -133,29 +136,39 @@
     </div>
     <div class="best-grid">
         @foreach($bestsellers as $product)
-            <a href="{{ route('products.show', $product->slug) }}" class="pcard" style="text-decoration:none;color:inherit;">
+            <div class="pcard">
                 <div class="pcard-img">
-                    <img src="{{ $product->primary_image_url }}" alt="{{ $product->name }}">
-                    <div class="pcard-wish">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
-                    </div>
+                    <a href="{{ route('products.show', $product->slug) }}" style="display:block;width:100%;height:100%;">
+                        <img src="{{ $product->primary_image_url }}" alt="{{ $product->name }}">
+                    </a>
+                    @auth
+                        <button type="button" class="pcard-wish {{ ($wishlistedProductIds ?? collect())->has($product->id) ? 'active' : '' }}" data-url="{{ route('wishlist.toggle', $product->id) }}" title="Save to wishlist">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ ($wishlistedProductIds ?? collect())->has($product->id) ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+                        </button>
+                    @else
+                        <a href="{{ route('login') }}" class="pcard-wish" title="Log in to save">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+                        </a>
+                    @endauth
                 </div>
 
-                @if($product->average_rating)
-                    <div class="stars">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
-                        <span style="font-size:12px;color:var(--color-text);opacity:0.7;">{{ number_format($product->average_rating, 1) }} ({{ $product->review_count }})</span>
-                    </div>
-                @endif
+                <a href="{{ route('products.show', $product->slug) }}" style="text-decoration:none;color:inherit;">
+                    @if($product->average_rating)
+                        <div class="stars">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                            <span style="font-size:12px;color:var(--color-text);opacity:0.7;">{{ number_format($product->average_rating, 1) }} ({{ $product->review_count }})</span>
+                        </div>
+                    @endif
 
-                <h3 style="font-size:15px;margin:0;">{{ $product->name }}</h3>
+                    <h3 style="font-size:15px;margin:0;">{{ $product->name }}</h3>
 
-                @if($product->default_variant)
-                    <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-                        <span style="font-weight:700;">&#8377;{{ number_format($product->default_variant->price_minor / 100, 0) }}</span>
-                    </div>
-                @endif
-            </a>
+                    @if($product->default_variant)
+                        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+                            <span style="font-weight:700;">&#8377;{{ number_format($product->default_variant->price_minor / 100, 0) }}</span>
+                        </div>
+                    @endif
+                </a>
+            </div>
         @endforeach
     </div>
 </section>
@@ -163,7 +176,7 @@
 <section class="wrap story-section" id="story">
     <div class="story-grid">
         <figure class="washed">
-            <img src="{{ asset('design/story-photo.jpg') }}" alt="Hands packing pickle jars" style="width:100%;aspect-ratio:4/5;object-fit:cover;">
+            <img src="{{ asset('design/story-photo.png') }}" alt="Hands packing pickle jars" style="width:100%;aspect-ratio:4/5;object-fit:cover;">
         </figure>
         <div>
             <span class="tag tag-accent-2">Our story</span>
@@ -209,3 +222,27 @@
 
 
 @endsection
+
+@push('scripts')
+<script>
+    document.querySelectorAll('button.pcard-wish[data-url]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            fetch(btn.dataset.url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    btn.classList.toggle('active', data.in_wishlist);
+                    btn.querySelector('svg').setAttribute('fill', data.in_wishlist ? 'currentColor' : 'none');
+                })
+                .catch(function () {
+                    alert('Something went wrong — please try again.');
+                });
+        });
+    });
+</script>
+@endpush

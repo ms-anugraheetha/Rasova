@@ -20,7 +20,7 @@
 
 @section('content')
 
-<a href="{{ route('admin.products.index') }}" class="admin-btn-link">&larr; Back to products</a>
+<a href="{{ route('admin.products.index') }}" class="admin-btn-link"> Back to products</a>
 <h1 style="margin-top:8px;">Edit: {{ $product->name }}</h1>
 
 <div class="admin-edit-layout">

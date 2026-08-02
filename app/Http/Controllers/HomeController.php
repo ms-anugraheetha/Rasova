@@ -26,12 +26,19 @@ class HomeController extends Controller
         $cart = $cartResolver->resolve($request);
         $cartCount = $cart->items()->sum('quantity');
 
+        $wishlistedProductIds = auth()->check()
+            ? \App\Models\WishlistItem::whereHas('wishlist', fn ($q) => $q->where('user_id', auth()->id()))
+                ->pluck('product_id')
+                ->flip()
+            : collect();
+
         return view('home', [
             'categories' => $categories,
             'bestsellers' => $bestsellers,
             'footerCategories' => $categories,
             'cartCount' => $cartCount,
             'testimonials' => $this->selectTestimonials(),
+            'wishlistedProductIds' => $wishlistedProductIds,
         ]);
     }
 

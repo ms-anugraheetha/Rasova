@@ -15,7 +15,7 @@
 
 @section('content')
 
-<a href="{{ route('admin.orders.index') }}" class="admin-btn-link">&larr; Back to orders</a>
+<a href="{{ route('admin.orders.index') }}" class="admin-btn-link">Back to orders</a>
 <h1 style="margin-top:8px;">Order #{{ $order->order_number }}</h1>
 
 <div class="admin-order-layout">

@@ -10,7 +10,9 @@
 .pcard-wish {
     position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; border-radius: 50%;
     background: var(--color-bg); display: grid; place-items: center; box-shadow: var(--shadow-sm); cursor: pointer;
+    border: none; padding: 0; color: var(--color-text); text-decoration: none;
 }
+.pcard-wish.active { color: var(--color-accent); }
 .stars { display: inline-flex; gap: 2px; align-items: center; color: var(--color-star); }
 .stock-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .filter-group { padding: 16px 0; border-bottom: 1px solid var(--color-divider); }
@@ -156,12 +158,20 @@
                     $lowStock = $inStock && $variant->stock_quantity <= 5;
                 @endphp
                 <div class="pcard">
-                    <a href="{{ route('products.show', $product->slug) }}" class="pcard-img" style="display:block;text-decoration:none;">
-                        <img src="{{ $product->primary_image_url }}" alt="{{ $product->name }}">
-                        <div class="pcard-wish">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
-                        </div>
-                    </a>
+                    <div class="pcard-img">
+                        <a href="{{ route('products.show', $product->slug) }}" style="display:block;width:100%;height:100%;">
+                            <img src="{{ $product->primary_image_url }}" alt="{{ $product->name }}">
+                        </a>
+                        @auth
+                            <button type="button" class="pcard-wish {{ ($wishlistedProductIds ?? collect())->has($product->id) ? 'active' : '' }}" data-url="{{ route('wishlist.toggle', $product->id) }}" title="Save to wishlist">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ ($wishlistedProductIds ?? collect())->has($product->id) ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+                            </button>
+                        @else
+                            <a href="{{ route('login') }}" class="pcard-wish" title="Log in to save">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+                            </a>
+                        @endauth
+                    </div>
 
                     @if($product->average_rating)
                         <div class="stars">
@@ -249,5 +259,26 @@
         closeBtn && closeBtn.addEventListener('click', close);
         scrim && scrim.addEventListener('click', close);
     })();
+
+    // Wishlist toggle (product cards)
+    document.querySelectorAll('button.pcard-wish[data-url]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            fetch(btn.dataset.url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    btn.classList.toggle('active', data.in_wishlist);
+                    btn.querySelector('svg').setAttribute('fill', data.in_wishlist ? 'currentColor' : 'none');
+                })
+                .catch(function () {
+                    alert('Something went wrong — please try again.');
+                });
+        });
+    });
 </script>
 @endpush

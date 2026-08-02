@@ -55,7 +55,13 @@ class ProductController extends Controller
         $products = $query->paginate(12)->withQueryString();
         $categories = Category::where('status', true)->orderBy('sort_order')->get();
 
-        return view('products.index', compact('products', 'categories'));
+        $wishlistedProductIds = auth()->check()
+            ? \App\Models\WishlistItem::whereHas('wishlist', fn ($q) => $q->where('user_id', auth()->id()))
+                ->pluck('product_id')
+                ->flip()
+            : collect();
+
+        return view('products.index', compact('products', 'categories', 'wishlistedProductIds'));
     }
 
     public function show(string $slug, Request $request)
@@ -98,8 +104,14 @@ class ProductController extends Controller
                 ->flip()
             : collect();
 
+        $inWishlist = $request->user()
+            ? \App\Models\WishlistItem::where('product_id', $product->id)
+                ->whereHas('wishlist', fn ($q) => $q->where('user_id', $request->user()->id))
+                ->exists()
+            : false;
+
         return view('products.show', compact(
-            'product', 'reviews', 'ratingBreakdown', 'userReview', 'userHasDeliveredPurchase', 'helpfulVoteIds'
+            'product', 'reviews', 'ratingBreakdown', 'userReview', 'userHasDeliveredPurchase', 'helpfulVoteIds', 'inWishlist'
         ));
     }
 }

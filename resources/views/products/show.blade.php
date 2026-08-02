@@ -34,6 +34,9 @@
 
 .pdp-add-form { margin-top: 8px; }
 .pdp-add-form .btn { width: 100%; min-height: 48px; }
+.pdp-secondary-actions { display: flex; gap: 10px; margin-top: 10px; }
+.pdp-secondary-actions .btn { flex: 1; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; }
+.pdp-wishlist-btn.active { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-accent-2-100); }
 
 .reviews-section { padding-top: 40px; border-top: 1px solid var(--color-divider); margin-top: 8px; }
 .reviews-section h2 { font-size: clamp(20px, 5vw, 26px); margin: 0 0 20px; }
@@ -199,6 +202,25 @@
                 <a href="{{ route('login') }}" class="btn btn-primary" style="display:block;text-align:center;">Log in to buy</a>
             @endauth
         </form>
+
+        <div class="pdp-secondary-actions">
+            <a href="#reviews" class="btn btn-secondary pdp-review-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                Write a Review
+            </a>
+
+            @auth
+                <button type="button" class="btn btn-secondary pdp-wishlist-btn {{ $inWishlist ? 'active' : '' }}" id="wishlistToggleBtn" data-product-id="{{ $product->id }}" data-url="{{ route('wishlist.toggle', $product->id) }}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="{{ $inWishlist ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" id="wishlistHeartIcon"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+                    <span id="wishlistBtnLabel">{{ $inWishlist ? 'Saved' : 'Save' }}</span>
+                </button>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-secondary pdp-wishlist-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
+                    Save
+                </a>
+            @endauth
+        </div>
     </div>
 </div>
 
@@ -353,6 +375,13 @@
                 input.value = btn.dataset.value;
                 highlight(parseInt(btn.dataset.value, 10));
             });
+            btn.addEventListener('mouseenter', function () {
+                highlight(parseInt(btn.dataset.value, 10));
+            });
+        });
+
+        picker.addEventListener('mouseleave', function () {
+            highlight(parseInt(input.value || 0, 10));
         });
 
         document.getElementById('reviewForm').addEventListener('submit', function (e) {
@@ -405,6 +434,34 @@
                 radio.checked = true;
                 hiddenInput.value = opt.getAttribute('data-variant-id');
             });
+        });
+    })();
+
+    // Wishlist toggle
+    (function () {
+        var btn = document.getElementById('wishlistToggleBtn');
+        if (!btn) return;
+
+        var heart = document.getElementById('wishlistHeartIcon');
+        var label = document.getElementById('wishlistBtnLabel');
+
+        btn.addEventListener('click', function () {
+            fetch(btn.dataset.url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+            })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    btn.classList.toggle('active', data.in_wishlist);
+                    heart.setAttribute('fill', data.in_wishlist ? 'currentColor' : 'none');
+                    label.textContent = data.in_wishlist ? 'Saved' : 'Save';
+                })
+                .catch(function () {
+                    alert('Something went wrong — please try again.');
+                });
         });
     })();
 </script>
