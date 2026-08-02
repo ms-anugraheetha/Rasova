@@ -89,8 +89,6 @@
 
 /* Write/edit review form */
 .write-review-block { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--color-divider); max-width: 520px; }
-.write-review-block #openReviewFormBtn { min-height: 44px; padding: 0 24px; }
-.write-review-block #openReviewFormBtn.js-hidden { display: none; }
 .review-form-collapsible {
     max-height: 0; overflow: hidden;
     transition: max-height 0.4s ease, opacity 0.3s ease;
@@ -218,7 +216,7 @@
         </form>
 
         <div class="pdp-secondary-actions">
-            <a href="#reviews" class="btn btn-secondary pdp-review-btn">
+            <a href="#reviews" class="btn btn-secondary pdp-review-btn" id="topWriteReviewBtn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
                 Write a Review
             </a>
@@ -327,8 +325,6 @@
     @endif
 
     <div class="write-review-block">
-        <button type="button" class="btn btn-secondary" id="openReviewFormBtn">{{ $userReview ? 'Update your review' : 'Write a Review' }}</button>
-
         <div class="review-form-collapsible" id="reviewFormWrapper">
             <div class="review-form-inner">
                 <h3>{{ $userReview ? 'Update your review' : 'Write a Review' }}</h3>
@@ -409,14 +405,13 @@
             }
         });
 
-        // Collapsible form toggle
-        var openBtn = document.getElementById('openReviewFormBtn');
+        // Collapsible form toggle — triggered by the "Write a Review" button near Add to Cart
+        var topBtn = document.getElementById('topWriteReviewBtn');
         var wrapper = document.getElementById('reviewFormWrapper');
         var cancelBtn = document.getElementById('cancelReviewFormBtn');
         var form = document.getElementById('reviewForm');
 
         function openForm() {
-            openBtn.classList.add('js-hidden');
             wrapper.classList.add('open');
             wrapper.style.maxHeight = wrapper.scrollHeight + 'px';
         }
@@ -424,13 +419,15 @@
         function closeForm() {
             wrapper.style.maxHeight = '0px';
             wrapper.classList.remove('open');
-            openBtn.classList.remove('js-hidden');
             form.reset();
             input.value = '';
             highlight(0);
         }
 
-        openBtn.addEventListener('click', openForm);
+        topBtn && topBtn.addEventListener('click', function (e) {
+            // Let the native #reviews anchor scroll happen, then expand the form.
+            openForm();
+        });
         cancelBtn.addEventListener('click', closeForm);
     })();
 
