@@ -17,6 +17,12 @@
                 <td style="padding: 8px 0; color: #888; font-size: 13px;">Email</td>
                 <td style="padding: 8px 0; font-size: 14px;"><a href="mailto:{{ $senderEmail }}">{{ $senderEmail }}</a></td>
             </tr>
+            @if ($subjectLine)
+                <tr>
+                    <td style="padding: 8px 0; color: #888; font-size: 13px;">Subject</td>
+                    <td style="padding: 8px 0; font-size: 14px;">{{ $subjectLine }}</td>
+                </tr>
+            @endif
         </table>
 
         <div style="border-top: 1px solid #eee; padding-top: 16px;">

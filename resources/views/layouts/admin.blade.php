@@ -85,6 +85,13 @@
             <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">Orders</a>
             <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">Products</a>
             <a href="{{ route('admin.reviews.index') }}" class="{{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">Reviews</a>
+            <a href="{{ route('admin.messages.index') }}" class="{{ request()->routeIs('admin.messages.*') ? 'active' : '' }}" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>Messages</span>
+                @php $unreadMessageCount = \App\Models\ContactMessage::unread()->count(); @endphp
+                @if ($unreadMessageCount > 0)
+                    <span style="background:var(--color-accent);color:white;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px;">{{ $unreadMessageCount }}</span>
+                @endif
+            </a>
         </nav>
         <div class="admin-nav-footer">
             <a href="{{ route('products.index') }}"> Back to store</a>

@@ -16,13 +16,16 @@ class ContactFormSubmitted extends Mailable
         public string $senderName,
         public string $senderEmail,
         public string $messageBody,
+        public ?string $subjectLine = null,
     ) {
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New contact form message from ' . $this->senderName,
+            subject: $this->subjectLine
+                ? "Contact form: {$this->subjectLine}"
+                : 'New contact form message from ' . $this->senderName,
             replyTo: [$this->senderEmail],
         );
     }
@@ -30,7 +33,7 @@ class ContactFormSubmitted extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.contact-form',
+            view: 'emails.contact-form-email',
         );
     }
 }

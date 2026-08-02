@@ -27,22 +27,7 @@ Route::middleware('gateway')->group(function () {
     Route::view('/about', 'about')->name('about');
     Route::view('/contact', 'contact')->name('contact');
 
-    Route::post('/contact', function () {
-        $validated = request()->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'message' => 'required|string|max:5000',
-        ]);
-
-        \Illuminate\Support\Facades\Mail::to('rasovadelights@gmail.com')
-            ->send(new \App\Mail\ContactFormSubmitted(
-                senderName: $validated['name'],
-                senderEmail: $validated['email'],
-                messageBody: $validated['message'],
-            ));
-
-        return back()->with('status', 'Message sent! We\'ll get back to you soon.');
-    })->name('contact.submit');
+    Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
 
     Route::post('/newsletter', function () {
         request()->validate(['email' => 'required|email']);
@@ -109,6 +94,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/reviews', [\App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('reviews.index');
     Route::patch('/reviews/{review}/approve', [\App\Http\Controllers\Admin\ReviewController::class, 'approve'])->name('reviews.approve');
     Route::delete('/reviews/{review}', [\App\Http\Controllers\Admin\ReviewController::class, 'destroy'])->name('reviews.destroy');
+
+    Route::get('/messages', [\App\Http\Controllers\Admin\MessageController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{message}', [\App\Http\Controllers\Admin\MessageController::class, 'show'])->name('messages.show');
+    Route::patch('/messages/{message}/read', [\App\Http\Controllers\Admin\MessageController::class, 'markRead'])->name('messages.markRead');
+    Route::delete('/messages/{message}', [\App\Http\Controllers\Admin\MessageController::class, 'destroy'])->name('messages.destroy');
 });
 
 require __DIR__.'/auth.php';
