@@ -5,6 +5,11 @@
 @section('extra-styles')
 .admin-order-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start; }
 .admin-order-layout > div { display: flex; flex-direction: column; gap: 20px; }
+.admin-payment-pill { font-size: 12px; padding: 3px 10px; border-radius: 20px; text-transform: capitalize; display: inline-flex; align-items: center; gap: 6px; }
+.admin-payment-pill.paid { background: color-mix(in srgb, green 12%, transparent); color: green; }
+.admin-payment-pill.pending { background: color-mix(in srgb, #b8860b 12%, transparent); color: #8a6d00; }
+.admin-payment-pill.failed { background: color-mix(in srgb, var(--color-error, #b3132d) 12%, transparent); color: var(--color-error, #b3132d); }
+.admin-payment-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .admin-line-row { display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; border-bottom: 1px solid var(--color-divider); }
 .admin-line-row:last-child { border-bottom: none; }
 .admin-total-row { display: flex; justify-content: space-between; font-weight: 700; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-divider); }
@@ -68,17 +73,29 @@
                 @csrf
                 @method('PATCH')
                 <select name="order_status" class="admin-select" style="margin-bottom:12px;">
-                    @foreach (['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'stock_issue'] as $status)
-                        <option value="{{ $status }}" @selected($order->order_status == $status)>{{ ucfirst($status) }}</option>
+                    @foreach (['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'stock_issue', 'failed'] as $status)
+                        <option value="{{ $status }}"
+                            @selected($order->order_status == $status)
+                            @if (in_array($status, ['processing', 'shipped', 'delivered']) && $order->payment_status !== 'paid') disabled @endif>
+                            {{ ucfirst($status) }}
+                        </option>
                     @endforeach
                 </select>
+                @if ($order->payment_status !== 'paid')
+                    <p style="font-size:12px;opacity:0.6;margin:-6px 0 12px;">Processing/Shipped/Delivered are disabled until payment is confirmed as paid.</p>
+                @endif
                 <button type="submit" class="btn btn-primary" style="width:100%;min-height:44px;">Update</button>
             </form>
         </div>
 
         <div class="admin-card">
             <h2>Payment</h2>
-            <p>Status: {{ ucfirst($order->payment_status) }}</p>
+            <p>Status:
+                <span class="admin-payment-pill {{ $order->payment_status }}">
+                    <span class="admin-payment-dot"></span>
+                    {{ ucfirst($order->payment_status) }}
+                </span>
+            </p>
             @if ($order->payment)
                 <p>Method: {{ ucfirst($order->payment->payment_method) }}</p>
                 <p>Gateway ID: {{ $order->payment->gateway_order_id }}</p>

@@ -36,8 +36,15 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $validated = $request->validate([
-            'order_status' => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled,stock_issue',
+            'order_status' => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled,stock_issue,failed',
         ]);
+
+        // Never let processing/shipped be set unless payment has actually
+        // succeeded — a failed or unpaid order can't move forward until a
+        // successful payment is received.
+        if (in_array($validated['order_status'], ['processing', 'shipped', 'delivered']) && $order->payment_status !== 'paid') {
+            return back()->with('error', 'This order cannot move to that status until payment is confirmed as paid.');
+        }
 
         $order->update(['order_status' => $validated['order_status']]);
 

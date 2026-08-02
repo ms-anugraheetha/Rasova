@@ -45,5 +45,45 @@ public function markPaid(int $orderId, string $gatewayEventId, int $amountMinor)
             'changed_by' => null,
         ]);
     });
-} 
+}
+
+/**
+ * Called when the payment gateway reports a failed, cancelled, or
+ * declined payment. A failed order should never sit as "pending" —
+ * that's misleading to the customer and to admins reviewing orders.
+ */
+public function markFailed(int $orderId, ?string $gatewayEventId = null): void
+{
+    DB::transaction(function () use ($orderId, $gatewayEventId) {
+        $order = Order::lockForUpdate()->findOrFail($orderId);
+
+        // Don't downgrade an order that's already been successfully paid —
+        // a late/duplicate "failed" event shouldn't override a real payment.
+        if ($order->payment_status === 'paid') {
+            return;
+        }
+
+        $order->update([
+            'payment_status' => 'failed',
+            'order_status' => 'failed',
+        ]);
+
+        $order->payment()->update(['status' => 'failed']);
+
+        if ($gatewayEventId) {
+            PaymentTransaction::create([
+                'payment_id' => $order->payment->id,
+                'transaction_type' => 'failure',
+                'gateway_event_id' => $gatewayEventId,
+                'amount_minor' => 0,
+            ]);
+        }
+
+        OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => 'failed',
+            'changed_by' => null,
+        ]);
+    });
+}
 }

@@ -15,6 +15,15 @@
 .order-card-head .order-date { font-size: 12px; opacity: 0.6; }
 .order-status-pill { font-size: 12px; padding: 3px 10px; border-radius: 20px; background: var(--color-accent-2-100); text-transform: capitalize; }
 .order-status-pill.delivered { background: color-mix(in srgb, green 15%, transparent); color: green; }
+.order-status-pill.failed, .order-status-pill.cancelled { background: color-mix(in srgb, var(--color-error, #b3132d) 12%, transparent); color: var(--color-error, #b3132d); }
+
+.payment-status-pill { font-size: 11px; padding: 2px 9px; border-radius: 20px; text-transform: capitalize; display: inline-flex; align-items: center; gap: 5px; }
+.payment-status-pill.paid { background: color-mix(in srgb, green 12%, transparent); color: green; }
+.payment-status-pill.pending { background: color-mix(in srgb, #b8860b 12%, transparent); color: #8a6d00; }
+.payment-status-pill.failed { background: color-mix(in srgb, var(--color-error, #b3132d) 12%, transparent); color: var(--color-error, #b3132d); }
+.payment-status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+.order-failed-note { font-size: 13px; color: var(--color-error, #b3132d); margin: 0 0 14px; }
 
 .order-item-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; flex-wrap: wrap; }
 .order-item-info { font-size: 14px; }
@@ -38,8 +47,23 @@
                     <h3>Order #{{ $order->order_number }}</h3>
                     <span class="order-date">{{ $order->created_at->format('M j, Y') }}</span>
                 </div>
-                <span class="order-status-pill {{ $order->order_status === 'delivered' ? 'delivered' : '' }}">{{ ucfirst($order->order_status) }}</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <span class="payment-status-pill {{ $order->payment_status }}">
+                        <span class="payment-status-dot"></span>
+                        {{ ucfirst($order->payment_status) }}
+                    </span>
+                    @if ($order->order_status !== $order->payment_status)
+                        <span class="order-status-pill {{ $order->order_status }}">{{ ucfirst($order->order_status) }}</span>
+                    @endif
+                </div>
             </div>
+
+            @if ($order->payment_status === 'failed')
+                <p class="order-failed-note">Payment was unsuccessful. Please try again.</p>
+                <a href="{{ route('products.index') }}" class="btn btn-secondary" style="margin-bottom:14px;display:inline-block;">Place a new order</a>
+            @elseif ($order->payment_status === 'pending')
+                <a href="{{ route('checkout.payment', $order->id) }}" class="btn btn-primary" style="margin-bottom:14px;display:inline-block;">Pay Now</a>
+            @endif
 
             @foreach ($order->items as $item)
                 <div class="order-item-row">

@@ -10,6 +10,11 @@
 .confirm-line { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; }
 .confirm-total { display: flex; justify-content: space-between; font-weight: 700; border-top: 1px solid var(--color-divider); padding-top: 14px; margin-top: 8px; }
 .confirm-note { font-size: 13px; opacity: 0.6; margin-top: 24px; }
+.confirm-failed-banner {
+    background: color-mix(in srgb, var(--color-error, #b3132d) 10%, transparent);
+    color: var(--color-error, #b3132d); border-radius: 16px; padding: 20px; margin-bottom: 24px; max-width: 480px; margin-left: auto; margin-right: auto;
+}
+.confirm-failed-banner p { margin: 0 0 16px; opacity: 1; }
 .confirm-guest-cta { margin-top: 32px; padding: 24px; border-radius: 16px; background: var(--color-accent-2-100); }
 .confirm-guest-cta p { font-size: 14px; opacity: 0.85; margin: 0 0 16px; }
 .confirm-guest-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
@@ -19,8 +24,19 @@
 @section('content')
 
 <div class="wrap confirm-wrap">
-    <h1>Thank you for your order!</h1>
-    <p>Order #{{ $order->order_number }} has been placed and is awaiting payment confirmation.</p>
+    @if ($order->payment_status === 'failed')
+        <h1>Payment unsuccessful</h1>
+        <div class="confirm-failed-banner">
+            <p>Payment was unsuccessful. Please try again.</p>
+            <a href="{{ route('products.index') }}" class="btn btn-primary">Place a new order</a>
+        </div>
+    @elseif ($order->payment_status === 'paid')
+        <h1>Thank you for your order!</h1>
+        <p>Order #{{ $order->order_number }} has been confirmed and is being prepared.</p>
+    @else
+        <h1>Thank you for your order!</h1>
+        <p>Order #{{ $order->order_number }} has been placed and is awaiting payment confirmation.</p>
+    @endif
 
     <div class="confirm-summary">
         @foreach ($order->items as $item)
@@ -34,8 +50,6 @@
             <span>&#8377;{{ number_format($order->total_minor / 100, 2) }}</span>
         </div>
     </div>
-
-    <p class="confirm-note">Note: Payment gateway integration is still in development, so this order is currently marked "pending" and won't auto-confirm yet.</p>
 
     @guest
         <div class="confirm-guest-cta">

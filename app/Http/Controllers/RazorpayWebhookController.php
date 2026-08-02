@@ -27,7 +27,24 @@ class RazorpayWebhookController extends Controller
         $data = json_decode($payload, true);
         $event = $data['event'] ?? null;
 
-        // Only act on successful payment capture; ignore other event types for now
+        if ($event === 'payment.failed') {
+            $paymentEntity = $data['payload']['payment']['entity'] ?? null;
+            if (!$paymentEntity) {
+                return response()->json(['error' => 'Malformed payload'], 400);
+            }
+
+            $payment = Payment::where('gateway_order_id', $paymentEntity['order_id'])->first();
+            if (!$payment) {
+                Log::error('Razorpay webhook: no matching payment found for failed event', ['gateway_order_id' => $paymentEntity['order_id']]);
+                return response()->json(['error' => 'Order not found'], 404);
+            }
+
+            $this->paymentWebhookService->markFailed($payment->order_id, $paymentEntity['id'] ?? null);
+
+            return response()->json(['status' => 'processed']);
+        }
+
+        // Ignore every other event type for now (only captured/failed are handled).
         if ($event !== 'payment.captured') {
             return response()->json(['status' => 'ignored']);
         }

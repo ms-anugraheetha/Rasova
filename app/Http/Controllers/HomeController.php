@@ -7,20 +7,16 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\WishlistItem;
-use App\Services\CartResolver;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class HomeController extends Controller
 {
-    public function index(Request $request, CartResolver $cartResolver): View
+    public function index(Request $request): View
     {
         $categories = Category::where('status', true)->orderBy('sort_order')->get();
 
         [$bestsellers, $showBestsellerPlaceholder] = $this->resolveBestsellers();
-
-        $cart = $cartResolver->resolve($request);
-        $cartCount = $cart->items()->sum('quantity');
 
         $wishlistedProductIds = auth()->check()
             ? WishlistItem::whereHas('wishlist', fn ($q) => $q->where('user_id', auth()->id()))
@@ -33,7 +29,6 @@ class HomeController extends Controller
             'bestsellers' => $bestsellers,
             'showBestsellerPlaceholder' => $showBestsellerPlaceholder,
             'footerCategories' => $categories,
-            'cartCount' => $cartCount,
             'testimonials' => $this->latestFeaturedReviews(),
             'wishlistedProductIds' => $wishlistedProductIds,
         ]);

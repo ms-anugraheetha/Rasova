@@ -31,7 +31,21 @@
         description: "Order #{{ $order->order_number }}",
         order_id: "{{ $order->payment->gateway_order_id }}",
         handler: function (response) {
-            window.location.href = "{{ route('checkout.confirmation', $order->id) }}";
+            fetch("{{ route('checkout.confirmPayment', $order->id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_signature: response.razorpay_signature,
+                }),
+            }).finally(function () {
+                window.location.href = "{{ route('checkout.confirmation', $order->id) }}";
+            });
         },
         prefill: {
             name: "{{ $order->shipping_full_name }}",
@@ -43,6 +57,23 @@
     };
 
     const rzp = new Razorpay(options);
+
+    rzp.on('payment.failed', function (response) {
+        fetch("{{ route('checkout.failPayment', $order->id) }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                razorpay_payment_id: response.error && response.error.metadata ? response.error.metadata.payment_id : null,
+            }),
+        }).finally(function () {
+            window.location.href = "{{ route('checkout.confirmation', $order->id) }}";
+        });
+    });
+
     document.getElementById('rzp-button').onclick = function () {
         rzp.open();
     };

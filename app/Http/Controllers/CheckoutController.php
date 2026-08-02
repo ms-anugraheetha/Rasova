@@ -127,6 +127,63 @@ class CheckoutController extends Controller
     }
 
     /**
+     * Client-triggered payment success handler — called from the Razorpay
+     * checkout JS `handler` callback. This is a fallback/primary path for
+     * local development, since Razorpay's server-to-server webhook can't
+     * reach a local Docker container without a public tunnel (ngrok etc.).
+     * In production, the webhook remains the authoritative source of truth;
+     * this just makes local testing actually work end-to-end.
+     */
+    public function confirmPayment(Request $request, int $orderId, \App\Services\PaymentWebhookService $webhookService)
+    {
+        $validated = $request->validate([
+            'razorpay_payment_id' => 'required|string',
+            'razorpay_order_id' => 'required|string',
+            'razorpay_signature' => 'required|string',
+        ]);
+
+        $order = Order::with('payment')->findOrFail($orderId);
+        $this->authorizeOrderAccess($request, $order);
+
+        if (!$order->payment || $order->payment->gateway_order_id !== $validated['razorpay_order_id']) {
+            return response()->json(['verified' => false], 422);
+        }
+
+        try {
+            $api = new \Razorpay\Api\Api(
+                config('services.razorpay.key_id'),
+                config('services.razorpay.key_secret')
+            );
+            $api->utility->verifyPaymentSignature([
+                'razorpay_order_id' => $validated['razorpay_order_id'],
+                'razorpay_payment_id' => $validated['razorpay_payment_id'],
+                'razorpay_signature' => $validated['razorpay_signature'],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['verified' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        $webhookService->markPaid($order->id, $validated['razorpay_payment_id'], $order->total_minor);
+
+        return response()->json(['verified' => true]);
+    }
+
+    /**
+     * Client-triggered payment failure handler — called from Razorpay's
+     * `payment.failed` JS event, for the same local-dev webhook-reachability
+     * reason as confirmPayment() above.
+     */
+    public function failPayment(Request $request, int $orderId, \App\Services\PaymentWebhookService $webhookService)
+    {
+        $order = Order::findOrFail($orderId);
+        $this->authorizeOrderAccess($request, $order);
+
+        $webhookService->markFailed($order->id, $request->input('razorpay_payment_id'));
+
+        return response()->json(['status' => 'recorded']);
+    }
+
+    /**
      * Logged-in users can only view their own orders; guests can only view
      * orders placed in their current session (tracked via guest_order_ids).
      */

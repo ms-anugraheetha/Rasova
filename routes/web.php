@@ -22,6 +22,8 @@ Route::middleware('gateway')->group(function () {
 
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('/api/search', [\App\Http\Controllers\SearchController::class, 'api'])->name('search.api');
+    Route::get('/search', [\App\Http\Controllers\SearchController::class, 'results'])->name('search.results');
     Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
     Route::view('/about', 'about')->name('about');
@@ -47,6 +49,8 @@ Route::middleware('gateway')->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/{orderId}/payment', [CheckoutController::class, 'payment'])->name('checkout.payment');
     Route::get('/checkout/{orderId}/confirmation', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
+    Route::post('/checkout/{orderId}/confirm-payment', [CheckoutController::class, 'confirmPayment'])->name('checkout.confirmPayment');
+    Route::post('/checkout/{orderId}/fail-payment', [CheckoutController::class, 'failPayment'])->name('checkout.failPayment');
 
     Route::post('/products/{product}/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
 

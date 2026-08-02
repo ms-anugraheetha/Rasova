@@ -36,9 +36,17 @@
         }
         .icon-btn:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
         .badge {
-            position: absolute; top: 2px; right: 2px; width: 16px; height: 16px;
-            border-radius: 50%; background: var(--color-accent); color: var(--color-bg);
-            font-size: 9px; display: grid; place-items: center; font-weight: 700;
+            position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px;
+            padding: 0 4px; box-sizing: border-box; border-radius: 9px;
+            background: var(--color-accent); color: #fff; border: 1.5px solid #fff;
+            font-size: 11px; font-weight: 700; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            animation: badge-pop 0.3s ease;
+        }
+        @keyframes badge-pop {
+            0% { transform: scale(0.4); opacity: 0; }
+            60% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
         /* Profile dropdown */
@@ -89,6 +97,54 @@
             z-index: 55;
         }
 
+        /* Search overlay */
+        .search-overlay {
+            display: none; position: fixed; inset: 0; z-index: 90;
+            background: color-mix(in srgb, #000 45%, transparent);
+        }
+        .search-overlay.open { display: block; }
+        .search-panel {
+            background: var(--color-bg); width: 100%; padding: 16px;
+            box-shadow: var(--shadow-lg);
+            opacity: 0; transform: translateY(-12px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .search-overlay.open .search-panel { opacity: 1; transform: translateY(0); }
+        .search-panel-input-row {
+            display: flex; align-items: center; gap: 10px;
+            border: 1.5px solid var(--color-divider); border-radius: 14px; padding: 0 14px;
+            background: var(--color-surface);
+        }
+        .search-panel-input {
+            flex: 1; border: none; background: none; outline: none; color: inherit;
+            font-size: 16px; min-height: 52px; font-family: inherit;
+        }
+        .search-close-btn {
+            border: none; background: none; cursor: pointer; color: var(--color-text); opacity: 0.6;
+            display: grid; place-items: center; padding: 6px; flex-shrink: 0;
+        }
+        .search-close-btn:hover { opacity: 1; }
+
+        .search-panel-results { max-height: 60vh; overflow-y: auto; margin-top: 8px; }
+        .search-result-item {
+            display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px;
+            text-decoration: none; color: inherit;
+        }
+        .search-result-item:hover { background: var(--color-surface); }
+        .search-result-img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; flex-shrink: 0; background: var(--color-surface); }
+        .search-result-info h4 { font-size: 14px; margin: 0 0 2px; }
+        .search-result-info p { font-size: 12px; opacity: 0.6; margin: 0; }
+        .search-result-price { margin-left: auto; font-weight: 700; font-size: 14px; white-space: nowrap; }
+
+        .search-no-results { text-align: center; padding: 32px 16px; }
+        .search-no-results p { opacity: 0.65; margin: 0 0 16px; font-size: 14px; }
+        .search-view-all-row { padding: 10px; }
+        .search-view-all-row a { font-size: 13px; font-weight: 600; }
+
+        @media (min-width: 768px) {
+            .search-panel { max-width: 560px; margin: 60px auto 0; border-radius: 20px; }
+        }
+
         /* Bottom tab bar: primary mobile navigation, thumb-reachable */
         .mobile-tabbar {
             display: flex; position: fixed; bottom: 0; left: 0; right: 0;
@@ -128,15 +184,15 @@
         @endauth
     </div>
 
-    <div style="display:flex;gap:2px;align-items:center;">
-        <div class="icon-btn" title="Search">
+    <div style="display:flex;gap:6px;align-items:center;">
+        <button type="button" class="icon-btn" title="Search" id="searchOpenBtn" style="border:none;background:none;cursor:pointer;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
-        </div>
+        </button>
 
         <a href="{{ route('cart.index') }}" class="icon-btn" title="Cart">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
             @if(($cartCount ?? 0) > 0)
-                <span class="badge">{{ $cartCount }}</span>
+                <span class="badge">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
             @endif
         </a>
 
@@ -182,6 +238,20 @@
 
 <div class="nav-scrim" id="navScrim"></div>
 
+<div class="search-overlay" id="searchOverlay">
+    <div class="search-panel" id="searchPanel">
+        <div class="search-panel-input-row">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;flex-shrink:0;"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+            <input type="text" id="searchInput" class="search-panel-input" placeholder="Search products, categories..." autocomplete="off">
+            <button type="button" id="searchCloseBtn" class="search-close-btn" aria-label="Close search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+        </div>
+
+        <div class="search-panel-results" id="searchResults"></div>
+    </div>
+</div>
+
 <main>
     @yield('content')
 </main>
@@ -194,7 +264,13 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg>Shop
     </a>
     <a href="{{ route('cart.index') }}" class="mt-item @if(request()->routeIs('cart.*')) active @endif">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path></svg>Cart
+        <span style="position:relative;display:inline-block;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path></svg>
+            @if(($cartCount ?? 0) > 0)
+                <span class="badge" style="top:-6px;right:-8px;">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
+            @endif
+        </span>
+        Cart
     </a>
     @auth
         <a href="{{ route('profile.edit') }}" class="mt-item @if(request()->routeIs('profile.*')) active @endif">
@@ -290,6 +366,106 @@
         });
         profileMenu.addEventListener('click', function (e) {
             e.stopPropagation();
+        });
+    })();
+
+    // Search overlay
+    (function () {
+        var openBtn = document.getElementById('searchOpenBtn');
+        var overlay = document.getElementById('searchOverlay');
+        var panel = document.getElementById('searchPanel');
+        var closeBtn = document.getElementById('searchCloseBtn');
+        var input = document.getElementById('searchInput');
+        var resultsEl = document.getElementById('searchResults');
+        if (!openBtn || !overlay) return;
+
+        var debounceTimer = null;
+        var currentController = null;
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function renderResults(results, term) {
+            if (results.length === 0) {
+                resultsEl.innerHTML =
+                    '<div class="search-no-results">' +
+                        '<p>No products found.</p>' +
+                        '<a href="{{ route("products.index") }}" class="btn btn-primary">Continue Shopping</a>' +
+                    '</div>';
+                return;
+            }
+
+            var html = results.map(function (item) {
+                return '<a href="' + item.url + '" class="search-result-item">' +
+                    '<img src="' + item.image + '" alt="' + escapeHtml(item.name) + '" class="search-result-img">' +
+                    '<div class="search-result-info">' +
+                        '<h4>' + escapeHtml(item.name) + '</h4>' +
+                        (item.category ? '<p>' + escapeHtml(item.category) + '</p>' : '') +
+                    '</div>' +
+                    (item.price ? '<span class="search-result-price">&#8377;' + item.price + '</span>' : '') +
+                '</a>';
+            }).join('');
+
+            html += '<div class="search-view-all-row"><a href="{{ route("search.results") }}?q=' + encodeURIComponent(term) + '">View all results &rarr;</a></div>';
+
+            resultsEl.innerHTML = html;
+        }
+
+        function search(term) {
+            if (currentController) currentController.abort();
+
+            if (!term) {
+                resultsEl.innerHTML = '';
+                return;
+            }
+
+            currentController = new AbortController();
+
+            fetch('{{ route("search.api") }}?q=' + encodeURIComponent(term), { signal: currentController.signal })
+                .then(function (res) { return res.json(); })
+                .then(function (data) { renderResults(data.results, term); })
+                .catch(function (err) { if (err.name !== 'AbortError') resultsEl.innerHTML = ''; });
+        }
+
+        function openSearch() {
+            overlay.classList.add('open');
+            setTimeout(function () { input.focus(); }, 50);
+        }
+
+        function closeSearch() {
+            overlay.classList.remove('open');
+            input.value = '';
+            resultsEl.innerHTML = '';
+        }
+
+        openBtn.addEventListener('click', openSearch);
+        closeBtn.addEventListener('click', closeSearch);
+
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) closeSearch();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && overlay.classList.contains('open')) closeSearch();
+        });
+
+        input.addEventListener('input', function () {
+            var term = input.value.trim();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function () { search(term); }, 300);
+        });
+
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var term = input.value.trim();
+                if (term) {
+                    window.location.href = '{{ route("search.results") }}?q=' + encodeURIComponent(term);
+                }
+            }
         });
     })();
 </script>
