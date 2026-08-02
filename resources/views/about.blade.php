@@ -73,7 +73,7 @@
 .timeline-content p { font-size: 13px; opacity: 0.6; margin: 0; }
 
 /* ===== Section 4: FAQ ===== */
-.faq-section { padding: 72px 0; }
+.faq-section { padding: 72px 0; background: var(--color-surface); }
 .faq-head { text-align: center; margin-bottom: 40px; }
 .faq-head h2 { font-size: clamp(24px, 6vw, 34px); margin: 0; }
 .faq-list { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
@@ -130,7 +130,7 @@
             <span class="tag tag-accent">Our story</span>
             <h1>A kitchen in Kerala, not a factory.</h1>
             <p>Rasova started in one family kitchen, sun-drying mangoes on the terrace and pressing them in small clay jars. Every batch we ship today is still made that way; by hand, in small runs, with ingredients we'd feed our own family.</p>
-            <p>No preservatives, no shortcuts, no factory lines; just fresh ingredients and traditional methods.</p>
+            <p>No preservatives, no shortcuts, no factory lines; just fresh ingredients and pickles prepared only after you order</p>
 
             <div class="story-stats">
                 <div><p>0</p><p>Preservatives</p></div>
@@ -328,7 +328,7 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"></path></svg>
                 </button>
                 <div class="faq-answer">
-                    <div class="faq-answer-inner">Only after you order. We don't prepare in bulk months ahead  freshness always comes first, even if it means a short wait.</div>
+                    <div class="faq-answer-inner">Only after you order. We don't prepare in bulk months ahead freshness always comes first, even if it means a short wait.</div>
                 </div>
             </div>
             <div class="faq-item">
