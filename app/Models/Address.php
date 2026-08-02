@@ -19,6 +19,7 @@ class Address extends Model
         'address_line_2',
         'landmark',
         'city',
+        'district',
         'state',
         'country',
         'postal_code',

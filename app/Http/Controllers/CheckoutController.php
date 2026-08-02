@@ -7,9 +7,18 @@ use App\Models\Order;
 use App\Services\CartResolver;
 use App\Services\CheckoutService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CheckoutController extends Controller
 {
+    public const INDIAN_STATES = [
+        'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
+        'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+        'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+        'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+        'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+    ];
+
     public function __construct(protected CartResolver $cartResolver)
     {
     }
@@ -25,20 +34,32 @@ class CheckoutController extends Controller
 
         $subtotal = $items->sum(fn ($item) => $item->productVariant->price_minor * $item->quantity);
 
-        return view('checkout.index', compact('items', 'subtotal'));
+        $savedAddresses = $request->user()
+            ? Address::where('user_id', $request->user()->id)->orderByDesc('is_default')->orderByDesc('created_at')->get()
+            : collect();
+
+        return view('checkout.index', [
+            'items' => $items,
+            'subtotal' => $subtotal,
+            'savedAddresses' => $savedAddresses,
+            'indianStates' => self::INDIAN_STATES,
+        ]);
     }
 
     public function store(Request $request, CheckoutService $checkoutService)
     {
         $rules = [
+            'address_type' => 'required|in:home,office,other',
             'full_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'digits:10'],
             'address_line_1' => 'required|string|max:255',
             'address_line_2' => 'nullable|string|max:255',
-            'landmark' => 'nullable|string|max:255',
             'city' => 'required|string|max:100',
-            'state' => 'required|string|max:100',
-            'postal_code' => 'required|string|max:20',
+            'district' => 'required|string|max:100',
+            'state' => ['required', Rule::in(self::INDIAN_STATES)],
+            'postal_code' => ['required', 'digits:6'],
+            'selected_address_id' => 'nullable|integer',
+            'editing_address_id' => 'nullable|integer',
         ];
 
         // Guests need an email on file to receive order updates/receipts —
@@ -50,15 +71,16 @@ class CheckoutController extends Controller
         $validated = $request->validate($rules);
 
         $shipping = [
-            'full_name' => $validated['full_name'],
+            'full_name' => trim($validated['full_name']),
             'phone' => $validated['phone'],
-            'address_line_1' => $validated['address_line_1'],
-            'address_line_2' => $validated['address_line_2'] ?? null,
-            'landmark' => $validated['landmark'] ?? null,
-            'city' => $validated['city'],
+            'address_line_1' => trim($validated['address_line_1']),
+            'address_line_2' => isset($validated['address_line_2']) ? trim($validated['address_line_2']) : null,
+            'city' => trim($validated['city']),
+            'district' => trim($validated['district']),
             'state' => $validated['state'],
             'country' => 'India',
             'postal_code' => $validated['postal_code'],
+            'address_type' => $validated['address_type'],
         ];
 
         $addressId = null;
@@ -66,13 +88,34 @@ class CheckoutController extends Controller
         $guestPhone = null;
 
         if ($request->user()) {
-            // Save to the user's address book so it can be reused next time.
-            $address = Address::create(array_merge($shipping, [
-                'user_id' => $request->user()->id,
-                'address_type' => 'home',
-                'is_default' => false,
-            ]));
-            $addressId = $address->id;
+            if ($request->filled('editing_address_id')) {
+                // Editing a previously saved address — update it in place.
+                $address = Address::where('user_id', $request->user()->id)
+                    ->findOrFail($validated['editing_address_id']);
+                $address->update($shipping);
+                $addressId = $address->id;
+            } elseif ($request->boolean('save_address')) {
+                // Brand new address, and the customer wants it kept for next time.
+                $address = Address::create(array_merge($shipping, [
+                    'user_id' => $request->user()->id,
+                    'is_default' => false,
+                ]));
+                $addressId = $address->id;
+            } elseif ($request->filled('selected_address_id')) {
+                // Using an existing saved address as-is — just reference it,
+                // no need to write anything since nothing changed.
+                $existing = Address::where('user_id', $request->user()->id)
+                    ->find($validated['selected_address_id']);
+                $addressId = $existing?->id;
+            }
+            // Otherwise: a new address used only for this order, not saved to the address book.
+
+            if ($request->boolean('set_default') && $addressId) {
+                Address::where('user_id', $request->user()->id)
+                    ->where('id', '!=', $addressId)
+                    ->update(['is_default' => false]);
+                Address::where('id', $addressId)->update(['is_default' => true]);
+            }
         } else {
             $guestEmail = $validated['email'];
             $guestPhone = $validated['phone'];

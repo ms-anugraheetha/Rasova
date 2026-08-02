@@ -63,6 +63,7 @@ class CheckoutService
                 'shipping_address_line_2' => $shipping['address_line_2'] ?? null,
                 'shipping_landmark' => $shipping['landmark'] ?? null,
                 'shipping_city' => $shipping['city'],
+                'shipping_district' => $shipping['district'] ?? null,
                 'shipping_state' => $shipping['state'],
                 'shipping_country' => $shipping['country'] ?? 'India',
                 'shipping_postal_code' => $shipping['postal_code'],
