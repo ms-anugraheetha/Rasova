@@ -65,7 +65,7 @@
 @section('content')
 <header class="wrap contact-hero">
     <h1>Get in touch</h1>
-    <p>Questions about an order, a wholesale enquiry, or just want to say hello — we read every message.</p>
+    <p>Questions about an order, a wholesale enquiry, or just want to say hello - we read every message.</p>
 </header>
 
 <div class="wrap contact-layout">
@@ -115,7 +115,7 @@
 
             <div class="contact-field">
                 <label for="contact_email">Email Address</label>
-                <input type="email" id="contact_email" name="email" placeholder="you@example.com" value="{{ old('email') }}" required>
+                <input type="email" id="contact_email" name="email" placeholder="Email Address" value="{{ old('email') }}" required>
                 <span class="field-error-message" data-error-for="email"></span>
             </div>
 

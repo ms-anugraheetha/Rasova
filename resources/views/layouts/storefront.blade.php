@@ -125,10 +125,6 @@
         <a href="{{ route('contact') }}" @if(request()->routeIs('contact')) aria-current="page" @endif>Contact</a>
         @auth
             <a href="{{ route('orders.index') }}" @if(request()->routeIs('orders.*')) aria-current="page" @endif>Your Orders</a>
-            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
-                @csrf
-                <button type="submit" class="nav-link-btn">Log out</button>
-            </form>
         @endauth
     </div>
 
@@ -151,11 +147,9 @@
                 </button>
                 <div id="profileMenu" class="profile-dropdown">
                     <a href="{{ route('profile.edit') }}">My Profile</a>
-                    <a href="{{ route('orders.index') }}">My Orders</a>
-                    <span class="profile-dropdown-soon" title="Coming soon">Saved Addresses</span>
                     <a href="{{ route('wishlist.index') }}">Wishlist</a>
+                    <a href="{{ route('orders.index') }}">My Orders</a>
                     @if (auth()->user()->is_admin)
-                        <div class="profile-dropdown-divider"></div>
                         <a href="{{ route('admin.dashboard') }}" class="profile-dropdown-admin">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" style="margin-right:6px;vertical-align:-2px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path></svg>
                             Admin Panel
@@ -164,7 +158,7 @@
                     <div class="profile-dropdown-divider"></div>
                     <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                         @csrf
-                        <button type="submit" class="profile-dropdown-logout">Logout</button>
+                        <button type="submit" class="profile-dropdown-logout">Log Out</button>
                     </form>
                 </div>
             </div>

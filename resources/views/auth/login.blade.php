@@ -1,9 +1,9 @@
-@extends('layouts.storefront')
+@extends('layouts.auth')
 
 @section('title', 'Log In — Rasova')
 
 @section('extra-styles')
-.auth-wrap { padding: 48px 0 72px; display: flex; justify-content: center; }
+.auth-wrap { flex: 1; width: 100%; padding: 24px 0 48px; display: flex; align-items: center; justify-content: center; }
 .auth-card { width: 100%; max-width: 400px; }
 .auth-card h1 { font-size: clamp(24px, 6vw, 30px); margin: 0 0 6px; text-align: center; }
 .auth-card .subtitle { font-size: 14px; opacity: 0.65; text-align: center; margin: 0 0 28px; }
@@ -29,7 +29,6 @@
 .auth-footer { text-align: center; font-size: 14px; margin-top: 24px; opacity: 0.75; }
 
 @media (min-width: 768px) {
-    .auth-wrap { padding: 72px 0 96px; }
     .auth-card { padding: 32px; border-radius: 20px; background: var(--color-surface); }
 }
 @endsection

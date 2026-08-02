@@ -18,7 +18,7 @@ class CartController extends Controller
         $cart = $this->cartResolver->resolve($request);
         $items = $cart->items()->with('productVariant.product')->get();
 
-        $subtotal = $items->sum(fn ($item) => $item->productVariant->price_minor * $item->quantity);
+        $subtotal = $items->sum(fn ($item) => ($item->productVariant?->price_minor ?? 0) * $item->quantity);
 
         return view('cart.index', compact('items', 'subtotal'));
     }

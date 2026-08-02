@@ -81,24 +81,39 @@
             <div class="cart-list">
         @endif
 
+        @php $product = $item->productVariant?->product; @endphp
+
         <div class="cart-item">
-            <div class="cart-item-img">
-                <img src="{{ $item->productVariant->product->primary_image_url }}" alt="{{ $item->productVariant->product->name }}">
-            </div>
+            @if ($product)
+                <div class="cart-item-img">
+                    <img src="{{ $product->primary_image_url }}" alt="{{ $product->name }}">
+                </div>
 
-            <div class="cart-item-body">
-                <h3>{{ $item->productVariant->product->name }}</h3>
-                <p>{{ $item->productVariant->weight }}</p>
+                <div class="cart-item-body">
+                    <h3>{{ $product->name }}</h3>
+                    <p>{{ $item->productVariant->weight }}</p>
 
-                <div class="cart-item-controls">
-                    <form method="POST" action="{{ route('cart.update', $item->id) }}" class="qty-form">
-                        @csrf
-                        @method('PATCH')
-                        <input type="number" name="quantity" value="{{ $item->quantity }}" min="1">
-                        <button type="submit" class="qty-update-btn">Update</button>
-                    </form>
+                    <div class="cart-item-controls">
+                        <form method="POST" action="{{ route('cart.update', $item->id) }}" class="qty-form">
+                            @csrf
+                            @method('PATCH')
+                            <input type="number" name="quantity" value="{{ $item->quantity }}" min="1">
+                            <button type="submit" class="qty-update-btn">Update</button>
+                        </form>
 
-                    <span class="cart-item-price">&#8377;{{ number_format($item->productVariant->price_minor * $item->quantity / 100, 2) }}</span>
+                        <span class="cart-item-price">&#8377;{{ number_format($item->productVariant->price_minor * $item->quantity / 100, 2) }}</span>
+
+                        <form method="POST" action="{{ route('cart.remove', $item->id) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="cart-remove-btn">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            @else
+                <div class="cart-item-body">
+                    <h3 style="opacity:0.6;">This item is no longer available</h3>
+                    <p>It may have been removed from the store.</p>
 
                     <form method="POST" action="{{ route('cart.remove', $item->id) }}">
                         @csrf
@@ -106,7 +121,7 @@
                         <button type="submit" class="cart-remove-btn">Remove</button>
                     </form>
                 </div>
-            </div>
+            @endif
         </div>
 
         @if ($loop->last)
