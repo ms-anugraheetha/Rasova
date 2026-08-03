@@ -17,6 +17,14 @@
     border: 1px solid var(--color-divider); background: var(--color-bg); color: inherit; font-size: 15px;
 }
 .field-error { color: var(--color-error, #b3132d); font-size: 12px; margin-top: 6px; }
+.password-field-wrap { position: relative; }
+.password-field-wrap input { padding-right: 44px; }
+.password-toggle-btn {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--color-text); opacity: 0.5;
+    display: grid; place-items: center; padding: 4px;
+}
+.password-toggle-btn:hover { opacity: 0.8; }
 
 .remember-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
 .remember-row input { width: 18px; height: 18px; }
@@ -57,7 +65,12 @@
 
             <div class="field-group">
                 <label for="password" class="field-label">Password</label>
-                <input id="password" type="password" name="password" required autocomplete="current-password">
+                <div class="password-field-wrap">
+                    <input id="password" type="password" name="password" required autocomplete="current-password">
+                    <button type="button" class="password-toggle-btn" data-toggle-for="password" aria-label="Show password">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </button>
+                </div>
                 @error('password')
                     <p class="field-error">{{ $message }}</p>
                 @enderror
@@ -83,3 +96,16 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    document.querySelectorAll('.password-toggle-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var input = document.getElementById(btn.getAttribute('data-toggle-for'));
+            var isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        });
+    });
+</script>
+@endpush

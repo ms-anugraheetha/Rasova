@@ -34,6 +34,13 @@ class Product extends Model
 
     public function getDefaultVariantAttribute()
     {
+        if ($this->relationLoaded('variants')) {
+            return $this->variants
+                ->where('is_active', true)
+                ->sortBy('price_minor')
+                ->first();
+        }
+
         return $this->variants()
             ->where('is_active', true)
             ->orderBy('price_minor')
@@ -45,8 +52,12 @@ class Product extends Model
      */
     public function getPrimaryImageUrlAttribute()
     {
-        $primary = $this->images()->where('is_primary', true)->first()
-            ?? $this->images()->first();
+        if ($this->relationLoaded('images')) {
+            $primary = $this->images->firstWhere('is_primary', true) ?? $this->images->first();
+        } else {
+            $primary = $this->images()->where('is_primary', true)->first()
+                ?? $this->images()->first();
+        }
 
         return $primary
             ? asset('storage/' . $primary->image)

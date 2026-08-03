@@ -26,6 +26,20 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        // Admin accounts are exempt from the email-verification gate — mainly
+        // so the store owner/dev can never be locked out of the admin panel
+        // by an SMTP outage or an account created before verification existed.
+        if (! Auth::user()->is_admin && ! Auth::user()->hasVerifiedEmail()) {
+            Auth::logout();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'Please verify your email before signing in.',
+            ])->onlyInput('email');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(route('home', absolute: false));
