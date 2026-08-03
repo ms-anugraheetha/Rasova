@@ -46,6 +46,25 @@
         .admin-flash-success { background: color-mix(in srgb, green 12%, transparent); color: green; padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 20px; }
         .admin-flash-error { background: color-mix(in srgb, var(--color-error, #b3132d) 12%, transparent); color: var(--color-error, #b3132d); padding: 10px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 20px; }
 
+        .admin-confirm-overlay {
+            display: none; position: fixed; inset: 0; z-index: 300;
+            background: color-mix(in srgb, #000 45%, transparent);
+            align-items: center; justify-content: center;
+        }
+        .admin-confirm-overlay.open { display: flex; }
+        .admin-confirm-modal {
+            background: var(--color-bg); border-radius: 16px; padding: 24px;
+            max-width: 360px; width: calc(100% - 40px); box-shadow: var(--shadow-lg);
+        }
+        .admin-confirm-message { font-size: 14px; margin: 0 0 20px; line-height: 1.5; }
+        .admin-confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .admin-confirm-cancel, .admin-confirm-ok {
+            border: none; border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600;
+            cursor: pointer; font-family: inherit;
+        }
+        .admin-confirm-cancel { background: var(--color-surface); color: var(--color-text); }
+        .admin-confirm-ok { background: var(--color-accent); color: #fff; }
+
         .admin-card { background: var(--color-surface); border-radius: 16px; padding: 24px; }
         .admin-card h2 { font-size: 15px; margin: 0 0 16px; }
 
@@ -82,9 +101,24 @@
         <div class="admin-sidebar-brand">Rasova Admin</div>
         <nav class="admin-nav">
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
-            <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">Orders</a>
+            <a href="{{ route('admin.orders.index') }}" class="{{ request()->routeIs('admin.orders.*') ? 'active' : '' }}" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>Orders</span>
+                @php
+                    $ordersLastSeen = \Illuminate\Support\Facades\Cache::get('admin_orders_last_seen_' . auth()->id());
+                    $newOrderCount = \App\Models\Order::when($ordersLastSeen, fn ($q) => $q->where('created_at', '>', $ordersLastSeen))->count();
+                @endphp
+                @if ($newOrderCount > 0)
+                    <span style="background:var(--color-accent);color:white;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px;">{{ $newOrderCount }}</span>
+                @endif
+            </a>
             <a href="{{ route('admin.products.index') }}" class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}">Products</a>
-            <a href="{{ route('admin.reviews.index') }}" class="{{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}">Reviews</a>
+            <a href="{{ route('admin.reviews.index') }}" class="{{ request()->routeIs('admin.reviews.*') ? 'active' : '' }}" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>Reviews</span>
+                @php $pendingReviewCount = \App\Models\Review::where('status', 'pending')->count(); @endphp
+                @if ($pendingReviewCount > 0)
+                    <span style="background:var(--color-accent);color:white;font-size:11px;font-weight:700;border-radius:10px;padding:1px 7px;">{{ $pendingReviewCount }}</span>
+                @endif
+            </a>
             <a href="{{ route('admin.messages.index') }}" class="{{ request()->routeIs('admin.messages.*') ? 'active' : '' }}" style="display:flex;justify-content:space-between;align-items:center;">
                 <span>Messages</span>
                 @php $unreadMessageCount = \App\Models\ContactMessage::unread()->count(); @endphp
@@ -116,7 +150,57 @@
     </main>
 </div>
 
+<div class="admin-confirm-overlay" id="adminConfirmOverlay">
+    <div class="admin-confirm-modal">
+        <p class="admin-confirm-message" id="adminConfirmMessage"></p>
+        <div class="admin-confirm-actions">
+            <button type="button" class="admin-confirm-cancel" id="adminConfirmCancel">Cancel</button>
+            <button type="button" class="admin-confirm-ok" id="adminConfirmOk">Delete</button>
+        </div>
+    </div>
+</div>
+
 @stack('scripts')
+
+<script>
+    (function () {
+        var overlay = document.getElementById('adminConfirmOverlay');
+        var messageEl = document.getElementById('adminConfirmMessage');
+        var okBtn = document.getElementById('adminConfirmOk');
+        var cancelBtn = document.getElementById('adminConfirmCancel');
+        var pendingForm = null;
+
+        document.querySelectorAll('form[data-confirm]').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                if (form.dataset.confirmed === 'true') return;
+                e.preventDefault();
+                pendingForm = form;
+                messageEl.textContent = form.dataset.confirm;
+                overlay.classList.add('open');
+            });
+        });
+
+        okBtn.addEventListener('click', function () {
+            overlay.classList.remove('open');
+            if (pendingForm) {
+                pendingForm.dataset.confirmed = 'true';
+                pendingForm.submit();
+            }
+        });
+
+        cancelBtn.addEventListener('click', function () {
+            overlay.classList.remove('open');
+            pendingForm = null;
+        });
+
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) {
+                overlay.classList.remove('open');
+                pendingForm = null;
+            }
+        });
+    })();
+</script>
 
 </body>
 </html>

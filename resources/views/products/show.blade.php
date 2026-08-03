@@ -103,6 +103,7 @@
 .review-form-actions { display: flex; gap: 10px; align-items: center; }
 .write-review-block h3 { font-size: 16px; margin: 0 0 14px; }
 .review-star-picker { display: flex; gap: 6px; margin-bottom: 14px; }
+.review-field-error { color: var(--color-accent); font-size: 12px; margin: 6px 0 14px; min-height: 14px; }
 .review-star-btn { background: none; border: none; padding: 0; cursor: pointer; color: var(--color-star); opacity: 0.35; }
 .review-star-btn.filled { opacity: 1; }
 .review-star-btn svg { fill: none; }
@@ -324,12 +325,13 @@
         <div class="review-form-collapsible" id="reviewFormWrapper">
             <div class="review-form-inner">
                 <h3>{{ $userReview ? 'Update your review' : 'Write a Review' }}</h3>
-                <form method="POST" action="{{ route('reviews.store', $product->id) }}" id="reviewForm">
+                <form method="POST" action="{{ route('reviews.store', $product->id) }}" id="reviewForm" novalidate>
                     @csrf
                     <input type="hidden" name="rating" id="reviewRatingInput" value="{{ $userReview->rating ?? '' }}">
 
                     @guest
-                        <input type="text" name="guest_name" class="review-title-input" placeholder="Your name" value="{{ old('guest_name') }}" required maxlength="150">
+                        <input type="text" name="guest_name" id="reviewGuestName" class="review-title-input" placeholder="Your name" value="{{ old('guest_name') }}" maxlength="150">
+                        <p class="review-field-error" id="reviewNameError"></p>
                     @endguest
 
                     <label class="review-anon-check">
@@ -348,8 +350,10 @@
                             </button>
                         @endfor
                     </div>
+                    <p class="review-field-error" id="reviewRatingError"></p>
 
-                    <textarea name="review" class="review-textarea" placeholder="What did you think of this product?" required>{{ old('review', $userReview->review ?? '') }}</textarea>
+                    <textarea name="review" id="reviewTextarea" class="review-textarea" placeholder="What did you think of this product? (at least 10 characters)" required minlength="10">{{ old('review', $userReview->review ?? '') }}</textarea>
+                    <p class="review-field-error" id="reviewTextError"></p>
 
                     <div class="review-form-actions">
                         <button type="submit" class="btn btn-primary" style="min-height:44px;padding:0 24px;">Submit Review</button>
@@ -384,6 +388,8 @@
             btn.addEventListener('click', function () {
                 input.value = btn.dataset.value;
                 highlight(parseInt(btn.dataset.value, 10));
+                var errorEl = document.getElementById('reviewRatingError');
+                if (errorEl) errorEl.textContent = '';
             });
             btn.addEventListener('mouseenter', function () {
                 highlight(parseInt(btn.dataset.value, 10));
@@ -394,10 +400,58 @@
             highlight(parseInt(input.value || 0, 10));
         });
 
+        var reviewGuestNameInput = document.getElementById('reviewGuestName');
+        if (reviewGuestNameInput) {
+            reviewGuestNameInput.addEventListener('input', function () {
+                if (reviewGuestNameInput.value.trim()) {
+                    document.getElementById('reviewNameError').textContent = '';
+                }
+            });
+        }
+
+        var reviewTextarea = document.getElementById('reviewTextarea');
+        if (reviewTextarea) {
+            reviewTextarea.addEventListener('input', function () {
+                if (reviewTextarea.value.trim().length >= 10) {
+                    document.getElementById('reviewTextError').textContent = '';
+                }
+            });
+        }
+
         document.getElementById('reviewForm').addEventListener('submit', function (e) {
+            var ratingErrorEl = document.getElementById('reviewRatingError');
+            var textErrorEl = document.getElementById('reviewTextError');
+            var textarea = document.getElementById('reviewTextarea');
+            var nameInput = document.getElementById('reviewGuestName');
+            var nameErrorEl = document.getElementById('reviewNameError');
+            var valid = true;
+
+            if (nameInput && nameErrorEl) {
+                if (!nameInput.value.trim()) {
+                    valid = false;
+                    nameErrorEl.textContent = 'Please enter your name.';
+                } else {
+                    nameErrorEl.textContent = '';
+                }
+            }
+
             if (!input.value) {
+                valid = false;
+                ratingErrorEl.textContent = 'Please select a star rating.';
+            } else {
+                ratingErrorEl.textContent = '';
+            }
+
+            if (textarea.value.trim().length < 10) {
+                valid = false;
+                textErrorEl.textContent = 'Please write at least 10 characters.';
+            } else {
+                textErrorEl.textContent = '';
+            }
+
+            if (!valid) {
                 e.preventDefault();
-                alert('Please select a star rating.');
+                picker.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
 
@@ -479,7 +533,7 @@
                     label.textContent = data.in_wishlist ? 'Saved' : 'Save';
                 })
                 .catch(function () {
-                    alert('Something went wrong — please try again.');
+                    alert('Something went wrong - please try again.');
                 });
         });
     })();

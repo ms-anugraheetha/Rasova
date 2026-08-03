@@ -93,7 +93,7 @@
                                     <button type="submit" class="admin-btn-link">Approve</button>
                                 </form>
                             @endif
-                            <form method="POST" action="{{ route('admin.reviews.destroy', $review->id) }}" onsubmit="return confirm('Delete this review permanently? This cannot be undone.');">
+                            <form method="POST" action="{{ route('admin.reviews.destroy', $review->id) }}" data-confirm="Delete this review permanently? This cannot be undone.">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="admin-btn-link admin-btn-danger">Delete</button>

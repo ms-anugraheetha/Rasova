@@ -29,7 +29,7 @@
     <p class="admin-message-body">{{ $message->message }}</p>
 </div>
 
-<form method="POST" action="{{ route('admin.messages.destroy', $message->id) }}" style="margin-top:16px;" onsubmit="return confirm('Delete this message permanently?');">
+<form method="POST" action="{{ route('admin.messages.destroy', $message->id) }}" style="margin-top:16px;" data-confirm="Delete this message permanently?">
     @csrf
     @method('DELETE')
     <button type="submit" class="admin-btn-link admin-btn-danger">Delete this message</button>

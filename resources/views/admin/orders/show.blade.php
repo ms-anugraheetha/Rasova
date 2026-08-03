@@ -55,7 +55,7 @@
             @forelse ($order->statusHistory as $history)
                 <div class="admin-history-item">
                     <strong>{{ ucfirst($history->status) }}</strong>
-                    <span style="opacity:0.6;"> — {{ $history->created_at->format('M j, Y g:ia') }}</span>
+                    <span style="opacity:0.6;"> — {{ $history->created_at ? $history->created_at->format('M j, Y g:ia') : 'date unknown' }}</span>
                     @if ($history->changedBy)
                         <span style="opacity:0.6;"> by {{ $history->changedBy->full_name }}</span>
                     @endif

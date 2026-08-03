@@ -59,7 +59,7 @@
             </form>
 
             <form method="POST" action="{{ route('admin.products.destroy', $product->id) }}" style="margin-top:16px;"
-                  onsubmit="return confirm('Delete this product and all its variants? This cannot be undone.');">
+                  data-confirm="Delete this product and all its variants? This cannot be undone.">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="admin-btn-link admin-btn-danger">Delete product</button>
@@ -77,7 +77,7 @@
                             <span class="admin-image-primary-badge">Primary</span>
                         @endif
                         <form method="POST" action="{{ route('admin.products.images.destroy', $image->id) }}"
-                              onsubmit="return confirm('Delete this image?');" style="position:absolute;top:6px;right:6px;">
+                              data-confirm="Delete this image?" style="position:absolute;top:6px;right:6px;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="admin-image-delete-btn">&times;</button>
@@ -117,7 +117,7 @@
                 </form>
 
                 <form method="POST" action="{{ route('admin.variants.destroy', $variant->id) }}"
-                      onsubmit="return confirm('Delete this variant?');" style="margin-top:8px;">
+                      data-confirm="Delete this variant?" style="margin-top:8px;">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="admin-btn-link admin-btn-danger" style="font-size:12px;">Delete this variant</button>

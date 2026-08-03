@@ -51,7 +51,7 @@
                                     <button type="submit" class="admin-btn-link">Mark as Read</button>
                                 </form>
                             @endif
-                            <form method="POST" action="{{ route('admin.messages.destroy', $message->id) }}" onsubmit="return confirm('Delete this message permanently?');">
+                            <form method="POST" action="{{ route('admin.messages.destroy', $message->id) }}" data-confirm="Delete this message permanently?">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="admin-btn-link admin-btn-danger">Delete</button>

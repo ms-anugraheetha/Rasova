@@ -39,6 +39,21 @@
     color: var(--color-accent-700); font-family: inherit;
 }
 .saved-address-actions button.danger { color: var(--color-error, #b3132d); }
+.saved-address-edit-form { margin-top: 4px; }
+.inline-edit-input {
+    width: 100%; min-height: 40px; padding: 0 12px; border-radius: 8px; margin-bottom: 8px;
+    border: 1px solid var(--color-divider); background: var(--color-bg); color: inherit; font-size: 13px; font-family: inherit; box-sizing: border-box;
+}
+select.inline-edit-input { min-height: 40px; }
+.inline-edit-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.inline-edit-row .inline-edit-input { margin-bottom: 8px; }
+.inline-edit-chip {
+    flex: 1; text-align: center; padding: 8px 6px; border-radius: 8px;
+    border: 1.5px solid var(--color-divider); background: var(--color-bg);
+    cursor: pointer; font-size: 12px; font-weight: 600; color: var(--color-text);
+}
+.inline-edit-chip.selected { border-color: var(--color-accent); background: var(--color-accent); color: #fff; }
+
 .add-new-address-btn {
     border: 1.5px dashed var(--color-divider); border-radius: 14px; padding: 14px;
     text-align: center; font-size: 14px; font-weight: 600; cursor: pointer; background: none;
@@ -241,6 +256,7 @@
             @endauth
 
             <button type="submit" class="btn btn-primary checkout-submit" id="placeOrderBtn" disabled>Place Order</button>
+            <p id="placeOrderHint" style="font-size:12px;color:var(--color-error, #b3132d);text-align:center;margin-top:8px;min-height:14px;"></p>
 
             @guest
                 <p style="font-size:13px;opacity:0.65;text-align:center;margin-top:14px;">
@@ -257,40 +273,82 @@
             @if ($savedAddresses->isNotEmpty())
                 <div class="saved-address-grid" id="savedAddressGrid">
                     @foreach ($savedAddresses as $addr)
-                        <div class="saved-address-card"
-                            data-id="{{ $addr->id }}"
-                            data-address-type="{{ $addr->address_type }}"
-                            data-full-name="{{ $addr->full_name }}"
-                            data-phone="{{ $addr->phone }}"
-                            data-address-line-1="{{ $addr->address_line_1 }}"
-                            data-address-line-2="{{ $addr->address_line_2 }}"
-                            data-city="{{ $addr->city }}"
-                            data-district="{{ $addr->district }}"
-                            data-state="{{ $addr->state }}"
-                            data-postal-code="{{ $addr->postal_code }}">
-                            <span class="saved-address-type-badge">
-                                {{ strtoupper($addr->address_type) }}
-                                @if ($addr->is_default)
-                                    <span class="saved-address-default-badge">Default</span>
-                                @endif
-                            </span>
-                            <p><strong>{{ $addr->full_name }}</strong></p>
-                            <p>{{ $addr->phone }}</p>
-                            <p class="saved-address-preview">{{ $addr->address_line_1 }}{{ $addr->address_line_2 ? ', ' . $addr->address_line_2 : '' }}, {{ $addr->city }}{{ $addr->district ? ', ' . $addr->district : '' }}, {{ $addr->state }} {{ $addr->postal_code }}</p>
-                            <div class="saved-address-actions">
-                                <button type="button" class="select-address-btn">Select</button>
-                                <button type="button" class="edit-address-btn">Edit</button>
-                                @if (! $addr->is_default)
-                                    <form method="POST" action="{{ route('addresses.setDefault', $addr->id) }}" style="display:inline;">
-                                        @csrf @method('PATCH')
-                                        <button type="submit">Set as Default</button>
+                        <div class="saved-address-card">
+                            <div class="saved-address-view">
+                                <span class="saved-address-type-badge">
+                                    {{ strtoupper($addr->address_type) }}
+                                    @if ($addr->is_default)
+                                        <span class="saved-address-default-badge">Default</span>
+                                    @endif
+                                </span>
+                                <p><strong>{{ $addr->full_name }}</strong></p>
+                                <p>{{ $addr->phone }}</p>
+                                <p class="saved-address-preview">{{ $addr->address_line_1 }}{{ $addr->address_line_2 ? ', ' . $addr->address_line_2 : '' }}, {{ $addr->city }}{{ $addr->district ? ', ' . $addr->district : '' }}, {{ $addr->state }} {{ $addr->postal_code }}</p>
+                                <div class="saved-address-actions">
+                                    <button type="button" class="select-address-btn"
+                                        data-id="{{ $addr->id }}"
+                                        data-address-type="{{ $addr->address_type }}"
+                                        data-full-name="{{ $addr->full_name }}"
+                                        data-phone="{{ $addr->phone }}"
+                                        data-address-line1="{{ $addr->address_line_1 }}"
+                                        data-address-line2="{{ $addr->address_line_2 }}"
+                                        data-city="{{ $addr->city }}"
+                                        data-district="{{ $addr->district }}"
+                                        data-state="{{ $addr->state }}"
+                                        data-postal-code="{{ $addr->postal_code }}">Select</button>
+                                    <button type="button" class="edit-toggle-btn">Edit</button>
+                                    @if (! $addr->is_default)
+                                        <form method="POST" action="{{ route('addresses.setDefault', $addr->id) }}" style="display:inline;">
+                                            @csrf @method('PATCH')
+                                            <button type="submit">Set as Default</button>
+                                        </form>
+                                    @endif
+                                    <form method="POST" action="{{ route('addresses.destroy', $addr->id) }}" style="display:inline;" data-confirm="Delete this address?">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="danger">Delete</button>
                                     </form>
-                                @endif
-                                <form method="POST" action="{{ route('addresses.destroy', $addr->id) }}" style="display:inline;" onsubmit="return confirm('Delete this address?');">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="danger">Delete</button>
-                                </form>
+                                </div>
                             </div>
+
+                            <form method="POST" action="{{ route('addresses.update', $addr->id) }}" class="saved-address-edit-form" style="display:none;">
+                                @csrf @method('PATCH')
+
+                                <div class="address-type-row" style="margin-bottom:10px;">
+                                    <label class="address-type-chip inline-edit-chip {{ $addr->address_type === 'home' ? 'selected' : '' }}" data-value="home">
+                                        <input type="radio" name="address_type" value="home" style="display:none;" {{ $addr->address_type === 'home' ? 'checked' : '' }}>
+                                        Home
+                                    </label>
+                                    <label class="address-type-chip inline-edit-chip {{ $addr->address_type === 'office' ? 'selected' : '' }}" data-value="office">
+                                        <input type="radio" name="address_type" value="office" style="display:none;" {{ $addr->address_type === 'office' ? 'checked' : '' }}>
+                                        Office
+                                    </label>
+                                    <label class="address-type-chip inline-edit-chip {{ $addr->address_type === 'other' ? 'selected' : '' }}" data-value="other">
+                                        <input type="radio" name="address_type" value="other" style="display:none;" {{ $addr->address_type === 'other' ? 'checked' : '' }}>
+                                        Other
+                                    </label>
+                                </div>
+
+                                <input type="text" name="full_name" class="inline-edit-input" placeholder="Full Name" value="{{ $addr->full_name }}" required>
+                                <input type="text" name="phone" class="inline-edit-input inline-edit-phone" placeholder="Phone" value="{{ $addr->phone }}" inputmode="numeric" maxlength="10" required>
+                                <input type="text" name="address_line_1" class="inline-edit-input" placeholder="House No., Building, Street" value="{{ $addr->address_line_1 }}" required>
+                                <input type="text" name="address_line_2" class="inline-edit-input" placeholder="Apartment, Suite, Landmark (Optional)" value="{{ $addr->address_line_2 }}">
+                                <div class="inline-edit-row">
+                                    <input type="text" name="city" class="inline-edit-input" placeholder="City" value="{{ $addr->city }}" required>
+                                    <input type="text" name="district" class="inline-edit-input" placeholder="District" value="{{ $addr->district }}" required>
+                                </div>
+                                <select name="state" class="inline-edit-input" required>
+                                    <option value="">Select state</option>
+                                    @foreach ($indianStates as $stateOption)
+                                        <option value="{{ $stateOption }}" {{ $addr->state === $stateOption ? 'selected' : '' }}>{{ $stateOption }}</option>
+                                    @endforeach
+                                </select>
+                                <input type="text" name="postal_code" class="inline-edit-input inline-edit-pin" placeholder="PIN Code" value="{{ $addr->postal_code }}" inputmode="numeric" maxlength="6" required>
+
+                                <div class="saved-address-actions" style="margin-top:10px;">
+                                    <button type="submit" class="btn btn-primary" style="min-height:38px;padding:0 16px;font-size:13px;">Save</button>
+                                    <button type="button" class="btn btn-secondary cancel-edit-btn" style="min-height:38px;padding:0 16px;font-size:13px;">Cancel</button>
+                                </div>
+                            </form>
                         </div>
                     @endforeach
                 </div>
@@ -443,37 +501,68 @@
             refreshSubmitState();
         }
 
-        document.querySelectorAll('.saved-address-card').forEach(function (card) {
-            var data = {
-                id: card.dataset.id,
-                address_type: card.dataset.addressType,
-                full_name: card.dataset.fullName,
-                phone: card.dataset.phone,
-                address_line_1: card.dataset.addressLine1,
-                address_line_2: card.dataset.addressLine2,
-                city: card.dataset.city,
-                district: card.dataset.district,
-                state: card.dataset.state,
-                postal_code: card.dataset.postalCode,
-            };
-
-            card.querySelector('.select-address-btn').addEventListener('click', function () {
+        document.querySelectorAll('.select-address-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var data = {
+                    id: btn.dataset.id,
+                    address_type: btn.dataset.addressType,
+                    full_name: btn.dataset.fullName,
+                    phone: btn.dataset.phone,
+                    address_line_1: btn.dataset.addressLine1,
+                    address_line_2: btn.dataset.addressLine2,
+                    city: btn.dataset.city,
+                    district: btn.dataset.district,
+                    state: btn.dataset.state,
+                    postal_code: btn.dataset.postalCode,
+                };
                 document.querySelectorAll('.saved-address-card').forEach(function (c) { c.classList.remove('selected'); });
-                card.classList.add('selected');
+                btn.closest('.saved-address-card').classList.add('selected');
                 populateForm(data);
                 selectedAddressIdInput.value = data.id;
                 editingAddressIdInput.value = '';
                 if (saveAddressCheck) { saveAddressCheck.checked = false; setDefaultRow.style.display = 'none'; }
             });
+        });
 
-            card.querySelector('.edit-address-btn').addEventListener('click', function () {
-                document.querySelectorAll('.saved-address-card').forEach(function (c) { c.classList.remove('selected'); });
-                card.classList.add('selected');
-                populateForm(data);
-                selectedAddressIdInput.value = '';
-                editingAddressIdInput.value = data.id;
-                if (saveAddressCheck) { saveAddressCheck.checked = true; saveAddressCheck.disabled = true; setDefaultRow.style.display = 'flex'; }
+        // ===== Inline card editing: expand/collapse, chip selection, digit-only, cancel =====
+        document.querySelectorAll('.saved-address-card').forEach(function (card) {
+            var viewEl = card.querySelector('.saved-address-view');
+            var editForm = card.querySelector('.saved-address-edit-form');
+            var editToggleBtn = card.querySelector('.edit-toggle-btn');
+            var cancelBtn = card.querySelector('.cancel-edit-btn');
+
+            editToggleBtn.addEventListener('click', function () {
+                viewEl.style.display = 'none';
+                editForm.style.display = 'block';
             });
+
+            cancelBtn.addEventListener('click', function () {
+                editForm.style.display = 'none';
+                viewEl.style.display = 'block';
+            });
+
+            editForm.querySelectorAll('.inline-edit-chip').forEach(function (chip) {
+                chip.addEventListener('click', function () {
+                    editForm.querySelectorAll('.inline-edit-chip').forEach(function (c) {
+                        var match = c.getAttribute('data-value') === chip.getAttribute('data-value');
+                        c.classList.toggle('selected', match);
+                        c.querySelector('input').checked = match;
+                    });
+                });
+            });
+
+            var phoneField = editForm.querySelector('.inline-edit-phone');
+            if (phoneField) {
+                phoneField.addEventListener('input', function () {
+                    phoneField.value = phoneField.value.replace(/\D/g, '').slice(0, 10);
+                });
+            }
+            var pinField = editForm.querySelector('.inline-edit-pin');
+            if (pinField) {
+                pinField.addEventListener('input', function () {
+                    pinField.value = pinField.value.replace(/\D/g, '').slice(0, 6);
+                });
+            }
         });
 
         var addNewBtn = document.getElementById('addNewAddressBtn');
@@ -499,17 +588,23 @@
 
         function refreshSubmitState() {
             var valid = true;
+            var missing = [];
 
-            if (!addressFields.full_name.value.trim()) valid = false;
-            if (!/^\d{10}$/.test(addressFields.phone.value)) valid = false;
-            if (!addressFields.address_line_1.value.trim()) valid = false;
-            if (!addressFields.city.value.trim()) valid = false;
-            if (!addressFields.district.value.trim()) valid = false;
-            if (!stateHidden.value || INDIAN_STATES.indexOf(stateHidden.value) === -1) valid = false;
-            if (!/^\d{6}$/.test(addressFields.postal_code.value)) valid = false;
-            if (emailInput && !emailInput.value.includes('@')) valid = false;
+            if (!addressFields.full_name.value.trim()) { valid = false; missing.push('Full Name'); }
+            if (!/^\d{10}$/.test(addressFields.phone.value)) { valid = false; missing.push('Phone Number'); }
+            if (!addressFields.address_line_1.value.trim()) { valid = false; missing.push('Address'); }
+            if (!addressFields.city.value.trim()) { valid = false; missing.push('City'); }
+            if (!addressFields.district.value.trim()) { valid = false; missing.push('District'); }
+            if (!stateHidden.value || INDIAN_STATES.indexOf(stateHidden.value) === -1) { valid = false; missing.push('State'); }
+            if (!/^\d{6}$/.test(addressFields.postal_code.value)) { valid = false; missing.push('PIN Code'); }
+            if (emailInput && !emailInput.value.includes('@')) { valid = false; missing.push('Email'); }
 
             placeOrderBtn.disabled = !valid;
+
+            var hintEl = document.getElementById('placeOrderHint');
+            if (hintEl) {
+                hintEl.textContent = missing.length ? 'Please complete: ' + missing.join(', ') : '';
+            }
         }
 
         [addressFields.full_name, addressFields.address_line_1, addressFields.city, addressFields.district].forEach(function (el) {

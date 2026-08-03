@@ -62,6 +62,7 @@ Route::middleware('gateway')->group(function () {
         Route::get('/wishlist', [\App\Http\Controllers\WishlistController::class, 'index'])->name('wishlist.index');
         Route::post('/wishlist/{product}/toggle', [\App\Http\Controllers\WishlistController::class, 'toggle'])->name('wishlist.toggle');
 
+        Route::patch('/addresses/{address}', [\App\Http\Controllers\AddressController::class, 'update'])->name('addresses.update');
         Route::delete('/addresses/{address}', [\App\Http\Controllers\AddressController::class, 'destroy'])->name('addresses.destroy');
         Route::patch('/addresses/{address}/set-default', [\App\Http\Controllers\AddressController::class, 'setDefault'])->name('addresses.setDefault');
 

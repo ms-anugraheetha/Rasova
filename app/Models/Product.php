@@ -16,7 +16,7 @@ class Product extends Model
         'category_id', 'name', 'slug', 'short_description', 'description',
         'main_ingredient', 'ingredients', 'shelf_life', 'storage_instructions',
         'dispatch_time', 'image_alt', 'is_available', 'is_hidden', 'featured',
-        'best_seller', 'new_arrival', 'seasonal', 'meta_title', 'meta_description',
+        'best_seller', 'new_arrival', 'seasonal', 'meta_title', 'meta_description', 'average_rating',
     ];
 
     protected function casts(): array

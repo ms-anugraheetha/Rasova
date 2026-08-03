@@ -18,7 +18,7 @@ class ReviewController extends Controller
     {
         $rules = [
             'rating' => 'required|integer|min:1|max:5',
-            'review' => 'required|string|max:2000',
+            'review' => 'required|string|min:10|max:2000',
             'is_anonymous' => 'nullable|boolean',
         ];
 
