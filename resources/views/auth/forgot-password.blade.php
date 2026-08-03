@@ -1,25 +1,61 @@
-<x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
+@extends('layouts.auth')
+
+@section('title', 'Forgot Password — Rasova')
+
+@section('extra-styles')
+.auth-wrap { flex: 1; width: 100%; padding: 24px 0 48px; display: flex; align-items: center; justify-content: center; }
+.auth-card { width: 100%; max-width: 400px; }
+.auth-card h1 { font-size: clamp(24px, 6vw, 30px); margin: 0 0 6px; text-align: center; }
+.auth-card .subtitle { font-size: 14px; opacity: 0.65; text-align: center; margin: 0 0 28px; line-height: 1.5; }
+
+.auth-status { font-size: 13px; color: var(--color-success, green); margin-bottom: 16px; text-align: center; }
+
+.field-group { margin-bottom: 16px; }
+.field-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.field-group input {
+    width: 100%; min-height: 46px; padding: 0 14px; border-radius: 10px;
+    border: 1px solid var(--color-divider); background: var(--color-bg); color: inherit; font-size: 15px;
+}
+.field-error { color: var(--color-error, #b3132d); font-size: 12px; margin-top: 6px; }
+
+.auth-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.auth-actions .btn { width: 100%; min-height: 48px; }
+
+.auth-footer { text-align: center; font-size: 14px; margin-top: 24px; opacity: 0.75; }
+
+@media (min-width: 768px) {
+    .auth-card { padding: 32px; border-radius: 20px; background: var(--color-surface); }
+}
+@endsection
+
+@section('content')
+
+<div class="wrap auth-wrap">
+    <div class="auth-card">
+        <h1>Forgot your password?</h1>
+    
+
+        @if (session('status'))
+            <p class="auth-status">{{ session('status') }}</p>
+        @endif
+
+        <form method="POST" action="{{ route('password.email') }}">
+            @csrf
+
+            <div class="field-group">
+                <label for="email" class="field-label">Email</label>
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus>
+                @error('email')
+                    <p class="field-error">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="auth-actions">
+                <button type="submit" class="btn btn-primary">Email Password Reset Link</button>
+                <a href="{{ route('login') }}" class="btn btn-secondary">Back to Login</a>
+            </div>
+        </form>
     </div>
+</div>
 
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <form method="POST" action="{{ route('password.email') }}">
-        @csrf
-
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Email Password Reset Link') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+@endsection

@@ -61,7 +61,7 @@
 <div class="wrap auth-wrap">
     <div class="auth-card">
         <h1>Create your account</h1>
-        <p class="subtitle">Join Rasova to track orders, save favourites, and more</p>
+    
 
         <form method="POST" action="{{ route('register') }}">
             @csrf
