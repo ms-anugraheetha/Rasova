@@ -61,6 +61,7 @@ class CartResolver
 
             if ($existing) {
                 $existing->update(['quantity' => $existing->quantity + $item->quantity]);
+                $item->delete();
             } else {
                 $item->update(['cart_id' => $userCart->id]);
             }

@@ -36,6 +36,12 @@
 
 .auth-footer { text-align: center; font-size: 14px; margin-top: 24px; opacity: 0.75; }
 
+.auth-back-link {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 13px; opacity: 0.65;
+    margin-bottom: 16px; text-decoration: none; color: inherit;
+}
+.auth-back-link:hover { opacity: 1; }
+
 @media (min-width: 768px) {
     .auth-card { padding: 32px; border-radius: 20px; background: var(--color-surface); }
 }
@@ -45,8 +51,19 @@
 
 <div class="wrap auth-wrap">
     <div class="auth-card">
+        <a href="{{ route('gateway') }}" class="auth-back-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"></path></svg>
+            Back
+        </a>
+
         <h1>Welcome back</h1>
-        <p class="subtitle">Log in to your Rasova account</p>
+        <p class="subtitle">
+            @if (request('intent') === 'wishlist')
+                Log in to save items to your wishlist
+            @else
+                Log in to your Rasova account
+            @endif
+        </p>
 
         @if (session('status'))
             <p class="auth-status">{{ session('status') }}</p>

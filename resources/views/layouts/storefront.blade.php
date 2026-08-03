@@ -100,6 +100,16 @@
         }
 
         /* Search overlay */
+        /* Guest toast — brief inline messages for guest-only prompts */
+        .guest-toast {
+            position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%) translateY(20px);
+            background: var(--color-accent); color: #fff; padding: 12px 20px; border-radius: 12px;
+            font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 200;
+            opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+            white-space: nowrap; max-width: calc(100vw - 32px); text-overflow: ellipsis; overflow: hidden;
+        }
+        .guest-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
         .search-overlay {
             display: none; position: fixed; inset: 0; z-index: 90;
             background: color-mix(in srgb, #000 45%, transparent);
@@ -240,6 +250,8 @@
 
 <div class="nav-scrim" id="navScrim"></div>
 
+<div class="guest-toast" id="guestToast"></div>
+
 <div class="search-overlay" id="searchOverlay">
     <div class="search-panel" id="searchPanel">
         <div class="search-panel-input-row">
@@ -370,6 +382,25 @@
             e.stopPropagation();
         });
     })();
+
+    // Shared guest toast — used by wishlist prompts and similar guest-only messages
+    var guestToastTimer = null;
+    function showGuestToast(message) {
+        var toast = document.getElementById('guestToast');
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(guestToastTimer);
+        guestToastTimer = setTimeout(function () {
+            toast.classList.remove('show');
+        }, 2200);
+    }
+
+    document.querySelectorAll('.guest-wishlist-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            showGuestToast('Log in to save to wishlist');
+        });
+    });
 
     // Search overlay
     (function () {

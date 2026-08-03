@@ -144,6 +144,15 @@
         });
     });
 
+    // Block pasting into Confirm Password — forces the user to actually
+    // re-type it, so a mismatched-but-pasted-twice typo can't slip through.
+    var confirmInput = document.getElementById('password_confirmation');
+    if (confirmInput) {
+        confirmInput.addEventListener('paste', function (e) {
+            e.preventDefault();
+        });
+    }
+
     (function () {
         var passwordInput = document.getElementById('password');
         var checklist = document.getElementById('passwordChecklist');

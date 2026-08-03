@@ -206,13 +206,9 @@
                 @endforeach
             </div>
 
-            @auth
-                <button type="submit" class="btn btn-primary" @if($product->variants->isEmpty() || $product->variants->every(fn($v) => $v->stock_quantity <= 0)) disabled @endif>
-                    Add to cart
-                </button>
-            @else
-                <a href="{{ route('login') }}" class="btn btn-primary" style="display:block;text-align:center;">Log in to buy</a>
-            @endauth
+            <button type="submit" class="btn btn-primary" @if($product->variants->isEmpty() || $product->variants->every(fn($v) => $v->stock_quantity <= 0)) disabled @endif>
+                Add to cart
+            </button>
         </form>
 
         <div class="pdp-secondary-actions">
@@ -227,10 +223,10 @@
                     <span id="wishlistBtnLabel">{{ $inWishlist ? 'Saved' : 'Save' }}</span>
                 </button>
             @else
-                <a href="{{ route('login') }}" class="btn btn-secondary pdp-wishlist-btn">
+                                <button type="button" class="btn btn-secondary pdp-wishlist-btn guest-wishlist-btn">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"></path></svg>
                     Save
-                </a>
+                </button>
             @endauth
         </div>
     </div>
