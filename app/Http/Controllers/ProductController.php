@@ -82,6 +82,10 @@ class ProductController extends Controller
             ->latest()
             ->paginate(5, ['*'], 'reviews_page');
 
+        // Reuse the count paginate() already computed internally instead of
+        // letting the review_count accessor run the same query again.
+        $product->setAttribute('review_count', $reviews->total());
+
         $ratingBreakdown = $product->ratingBreakdown();
 
         $userReview = null;

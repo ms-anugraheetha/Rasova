@@ -7,20 +7,31 @@ use Illuminate\Http\Request;
 
 class CartResolver
 {
+    protected ?Cart $resolvedCart = null;
+
     /**
      * Get the current cart for this request — the authenticated user's cart,
      * or a session-scoped guest cart if not logged in. If the user just
      * logged in and had a guest cart in their session, its items are merged
      * into their account cart (matching quantities are summed) and the
      * guest cart is discarded.
+     *
+     * Memoized per-request (this service is bound as a singleton) since
+     * both the cart-badge view composer and page controllers independently
+     * call resolve() — without memoization that meant two identical
+     * cart lookups on every single page load.
      */
     public function resolve(Request $request): Cart
     {
+        if ($this->resolvedCart) {
+            return $this->resolvedCart;
+        }
+
         if ($request->user()) {
             $cart = Cart::firstOrCreate(['user_id' => $request->user()->id]);
             $this->mergeGuestCartInto($request, $cart);
 
-            return $cart;
+            return $this->resolvedCart = $cart;
         }
 
         $guestCartId = $request->session()->get('guest_cart_id');
@@ -29,7 +40,7 @@ class CartResolver
             $cart = Cart::find($guestCartId);
 
             if ($cart) {
-                return $cart;
+                return $this->resolvedCart = $cart;
             }
         }
 
@@ -39,7 +50,7 @@ class CartResolver
         $cart = Cart::create(['session_id' => $request->session()->getId()]);
         $request->session()->put('guest_cart_id', $cart->id);
 
-        return $cart;
+        return $this->resolvedCart = $cart;
     }
 
     protected function mergeGuestCartInto(Request $request, Cart $userCart): void

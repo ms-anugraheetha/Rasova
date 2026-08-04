@@ -442,7 +442,7 @@
                 '</a>';
             }).join('');
 
-            html += '<div class="search-view-all-row"><a href="{{ route("search.results") }}?q=' + encodeURIComponent(term) + '">View all results &rarr;</a></div>';
+            html += '<div class="search-view-all-row"><a href="{{ route("search.results") }}?q=' + encodeURIComponent(term) + '">View all results </a></div>';
 
             resultsEl.innerHTML = html;
         }

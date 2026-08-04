@@ -99,6 +99,10 @@ class Review extends Model
 
     public function getHelpfulCountAttribute(): int
     {
+        if ($this->relationLoaded('helpfulVotes')) {
+            return $this->helpfulVotes->count();
+        }
+
         return $this->helpfulVotes()->count();
     }
 }

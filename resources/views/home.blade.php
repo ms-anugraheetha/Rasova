@@ -112,7 +112,7 @@
 
 <section class="hero-section">
     <figure class="hero-banner" style="margin:0;">
-        <img src="{{ asset('design/hero-jar-1.png') }}" alt="Jars of Rasova pickle on a warm surface">
+        <img src="{{ asset('design/hero-jar.jpg') }}" alt="Jars of Rasova pickle on a warm surface">
     </figure>
 
     <div class="wrap hero-copy">

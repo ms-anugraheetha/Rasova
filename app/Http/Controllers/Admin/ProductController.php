@@ -10,9 +10,33 @@ use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class ProductController extends Controller
 {
+    /**
+     * Resize (if needed) and re-compress an uploaded product photo before
+     * storing it — uploads come from real cameras/phones with no size
+     * discipline, unlike the hand-optimized static site images, so this
+     * needs to happen automatically on every upload rather than as a
+     * one-off manual cleanup.
+     */
+    protected function processAndStoreProductImage(\Illuminate\Http\UploadedFile $file): string
+    {
+        $manager = new ImageManager(Driver::class);
+        $image = $manager->decodePath($file->getRealPath());
+
+        if ($image->width() > 1600) {
+            $image->scale(width: 1600);
+        }
+
+        $filename = 'products/' . Str::random(40) . '.jpg';
+        $encoded = $image->encode(new \Intervention\Image\Encoders\JpegEncoder(quality: 82));
+        Storage::disk('public')->put($filename, (string) $encoded);
+
+        return $filename;
+    }
     public function index(Request $request)
     {
         $query = Product::query()->with(['category', 'variants']);
@@ -55,7 +79,7 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
+            $path = $this->processAndStoreProductImage($request->file('image'));
             ProductImage::create([
                 'product_id' => $product->id,
                 'image' => $path,
@@ -114,7 +138,7 @@ class ProductController extends Controller
             'image' => 'required|image|max:4096',
         ]);
 
-        $path = $request->file('image')->store('products', 'public');
+        $path = $this->processAndStoreProductImage($request->file('image'));
 
         $isFirstImage = $product->images()->count() === 0;
 

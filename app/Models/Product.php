@@ -12,6 +12,13 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Per-request memoization for expensive accessors (review_count) that
+     * aren't always covered by withCount() — prevents re-querying the same
+     * value multiple times within a single page render.
+     */
+    protected array $memoizedAttributes = [];
+
     protected $fillable = [
         'category_id', 'name', 'slug', 'short_description', 'description',
         'main_ingredient', 'ingredients', 'shelf_life', 'storage_instructions',
@@ -96,7 +103,11 @@ class Product extends Model
             return (int) $this->attributes['review_count'];
         }
 
-        return $this->reviews()->visible()->count();
+        if (! array_key_exists('review_count', $this->memoizedAttributes)) {
+            $this->memoizedAttributes['review_count'] = $this->reviews()->visible()->count();
+        }
+
+        return $this->memoizedAttributes['review_count'];
     }
 
     /**
