@@ -18,10 +18,13 @@ class PaymentWebhookService
      */
 public function markPaid(int $orderId, string $gatewayEventId, int $amountMinor): void
 {
-    DB::transaction(function () use ($orderId, $gatewayEventId, $amountMinor) {
+    $alreadyPaid = false;
+
+    DB::transaction(function () use ($orderId, $gatewayEventId, $amountMinor, &$alreadyPaid) {
         $order = Order::lockForUpdate()->findOrFail($orderId);
 
         if ($order->payment_status === 'paid') {
+            $alreadyPaid = true;
             return;
         }
 
@@ -45,6 +48,26 @@ public function markPaid(int $orderId, string $gatewayEventId, int $amountMinor)
             'changed_by' => null,
         ]);
     });
+
+    // Sent outside the transaction, and only on the FIRST time this order
+    // is marked paid — a duplicate/retried webhook (same gatewayEventId
+    // guard aside) should never send the confirmation email twice.
+    if (! $alreadyPaid) {
+        $order = Order::with(['items', 'user'])->find($orderId);
+
+        try {
+            $recipientEmail = $order->user->email ?? $order->guest_email;
+            if ($recipientEmail) {
+                \Illuminate\Support\Facades\Mail::to($recipientEmail)
+                    ->send(new \App\Mail\OrderConfirmation($order));
+            }
+
+            \Illuminate\Support\Facades\Mail::to('rasovadelights@gmail.com')
+                ->send(new \App\Mail\PaymentConfirmedNotification($order));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send payment-confirmed emails: ' . $e->getMessage());
+        }
+    }
 }
 
 /**

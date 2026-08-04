@@ -21,17 +21,12 @@ class VerifyEmailController extends Controller
             event(new Verified($request->user()));
         }
 
-        // Log out afterward so the user lands on the login page fresh,
+        // Log out afterward so the user lands on a fresh success page,
         // per spec — verifying shouldn't silently drop them into the site.
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with(
-            'status',
-            $alreadyVerified
-                ? 'Your email is already verified. You can log in below.'
-                : 'Your email has been verified successfully. You can now log in.'
-        );
+        return redirect()->route('verification.success');
     }
 }

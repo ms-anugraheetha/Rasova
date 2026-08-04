@@ -10,7 +10,7 @@
 
 @section('content')
 
-<a href="{{ route('admin.messages.index') }}" class="admin-btn-link">&larr; Back to messages</a>
+<a href="{{ route('admin.messages.index') }}" class="admin-btn-link"> Back to messages</a>
 <h1 style="margin-top:8px;">Message from {{ $message->name }}</h1>
 
 <div class="admin-card admin-message-detail" style="max-width:640px;">

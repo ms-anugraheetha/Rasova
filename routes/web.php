@@ -22,14 +22,14 @@ Route::middleware('gateway')->group(function () {
 
     Route::get('/', [HomeController::class, 'index'])->name('home');
     Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-    Route::get('/api/search', [\App\Http\Controllers\SearchController::class, 'api'])->name('search.api');
+    Route::get('/api/search', [\App\Http\Controllers\SearchController::class, 'api'])->name('search.api')->middleware('throttle:60,1');
     Route::get('/search', [\App\Http\Controllers\SearchController::class, 'results'])->name('search.results');
     Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
     Route::view('/about', 'about')->name('about');
     Route::view('/contact', 'contact')->name('contact');
 
-    Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit');
+    Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit')->middleware('throttle:5,1');
 
     Route::post('/newsletter', function () {
         request()->validate(['email' => 'required|email']);
@@ -52,7 +52,7 @@ Route::middleware('gateway')->group(function () {
     Route::post('/checkout/{orderId}/confirm-payment', [CheckoutController::class, 'confirmPayment'])->name('checkout.confirmPayment');
     Route::post('/checkout/{orderId}/fail-payment', [CheckoutController::class, 'failPayment'])->name('checkout.failPayment');
 
-    Route::post('/products/{product}/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
+    Route::post('/products/{product}/reviews', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store')->middleware('throttle:10,1');
 
     Route::middleware('auth')->group(function () {
         Route::post('/reviews/{review}/helpful', [\App\Http\Controllers\ReviewController::class, 'markHelpful'])->name('reviews.helpful');
