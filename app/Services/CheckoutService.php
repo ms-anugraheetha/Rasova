@@ -32,21 +32,27 @@ class CheckoutService
         ?string $guestPhone = null,
         string $paymentMethod = 'upi'
     ): Order {
-        $items = $cart->items()->with('productVariant.product')->get();
-
-        if ($items->isEmpty()) {
-            throw new \RuntimeException('Cart is empty.');
-        }
-
-        $subtotal = $items->sum(fn ($i) => $i->productVariant->price_minor * $i->quantity);
-        $shippingFee = 0; // TODO: plug in ShippingRule lookup here later
-        $gstAmount = 0;   // TODO: plug in TaxRate lookup here later
-        $total = $subtotal + $shippingFee + $gstAmount;
-
         return \DB::transaction(function () use (
-            $user, $shipping, $addressId, $guestEmail, $guestPhone,
-            $items, $subtotal, $shippingFee, $gstAmount, $total, $paymentMethod, $cart
+            $cart, $user, $shipping, $addressId, $guestEmail, $guestPhone, $paymentMethod
         ) {
+            // Lock the cart row for the duration of this transaction. If two
+            // requests hit checkout() for the same cart at the same time (double
+            // click, retried request on a flaky connection), the second one
+            // blocks here until the first commits — by which point the first
+            // request has already deleted the cart items, so the second sees
+            // an empty cart and throws instead of creating a duplicate order.
+            $lockedCart = Cart::where('id', $cart->id)->lockForUpdate()->first();
+
+            $items = $lockedCart->items()->with('productVariant.product')->get();
+
+            if ($items->isEmpty()) {
+                throw new \RuntimeException('Cart is empty.');
+            }
+
+            $subtotal = $items->sum(fn ($i) => $i->productVariant->price_minor * $i->quantity);
+            $shippingFee = 0; // TODO: plug in ShippingRule lookup here later
+            $gstAmount = 0;   // TODO: plug in TaxRate lookup here later
+            $total = $subtotal + $shippingFee + $gstAmount;
             $order = Order::create([
                 'order_number' => 'RSV-' . strtoupper(Str::random(10)),
                 'user_id' => $user?->id,

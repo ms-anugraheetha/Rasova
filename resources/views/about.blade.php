@@ -140,7 +140,7 @@
 
         <div class="story-figure-col" data-reveal="right">
             <figure class="story-figure">
-                <img src="{{ asset('design/story-photo.png') }}" alt="Hands packing pickle jars" loading="lazy">
+                <img src="{{ asset('design/story-photo.jpg') }}" alt="Hands packing pickle jars" loading="lazy">
             </figure>
         </div>
     </div>
@@ -279,7 +279,7 @@
                 <div class="timeline-connector"></div>
                 <div class="timeline-content">
                     <h3>Packed with Care</h3>
-                    <p>Sealed fresh in small batches, ready to travel.</p>
+                    <p>Prepared fresh only when you order - never stocked, always made to order.</p>
                 </div>
             </div>
             <div class="timeline-step" data-reveal="up">

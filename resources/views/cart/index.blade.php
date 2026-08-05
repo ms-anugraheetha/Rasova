@@ -94,21 +94,30 @@
                     <p>{{ $item->productVariant->weight }}</p>
 
                     <div class="cart-item-controls">
-                        <form method="POST" action="{{ route('cart.update', $item->id) }}" class="qty-form">
-                            @csrf
-                            @method('PATCH')
-                            <input type="number" name="quantity" value="{{ $item->quantity }}" min="1">
-                            <button type="submit" class="qty-update-btn">Update</button>
-                        </form>
+    <form method="POST" action="{{ route('cart.update', $item->id) }}" class="qty-form">
+        @csrf
+        @method('PATCH')
+        <div class="qty-field">
+            <label for="quantity-{{ $item->id }}">Quantity:</label>
+            <input
+                type="number"
+                id="quantity-{{ $item->id }}"
+                name="quantity"
+                value="{{ $item->quantity }}"
+                min="1"
+            >
+        </div>
+        <button type="submit" class="qty-update-btn">Update</button>
+    </form>
 
-                        <span class="cart-item-price">&#8377;{{ number_format($item->productVariant->price_minor * $item->quantity / 100, 2) }}</span>
+    <span class="cart-item-price">&#8377;{{ number_format($item->productVariant->price_minor * $item->quantity / 100, 2) }}</span>
 
-                        <form method="POST" action="{{ route('cart.remove', $item->id) }}">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="cart-remove-btn">Remove</button>
-                        </form>
-                    </div>
+    <form method="POST" action="{{ route('cart.remove', $item->id) }}">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="cart-remove-btn" aria-label="Remove {{ $item->productVariant->product->name ?? 'item' }} from cart">Remove</button>
+    </form>
+</div>
                 </div>
             @else
                 <div class="cart-item-body">

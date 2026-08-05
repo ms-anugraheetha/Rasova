@@ -28,6 +28,10 @@ Route::middleware('gateway')->group(function () {
 
     Route::view('/about', 'about')->name('about');
     Route::view('/contact', 'contact')->name('contact');
+    Route::view('/shipping', 'shipping')->name('shipping');
+    Route::view('/returns', 'returns')->name('returns');
+    Route::view('/privacy-policy', 'privacy-policy')->name('privacy-policy');
+    Route::view('/terms', 'terms')->name('terms');
 
     Route::post('/contact', [\App\Http\Controllers\ContactController::class, 'submit'])->name('contact.submit')->middleware('throttle:5,1');
 

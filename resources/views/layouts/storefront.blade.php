@@ -5,6 +5,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Rasova — Homemade Kerala Pickles')</title>
+    <meta name="description" content="@yield('meta-description', 'Rasova homemade Kerala pickles made to order. Traditional recipes, no preservatives, delivered fresh to your door.')">
 
     <link rel="stylesheet" href="{{ asset('design/_ds/organic/styles.css') }}">
     <link rel="stylesheet" href="{{ asset('design/rasova-theme.css') }}">
@@ -301,10 +302,10 @@
     <div class="footer-grid" style="padding-bottom:28px;">
         <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-                <img src="{{ asset('design/assets/rasova-logo.png') }}" style="width:32px;height:32px;border-radius:50%;">
+                <img src="{{ asset('design/assets/rasova-logo.png') }}" alt="Rasova" style="width:32px;height:32px;border-radius:50%;">
                 <span class="nav-brand" style="margin:0;">Rasova</span>
             </div>
-            <p style="font-size:13px;opacity:0.7;max-width:32ch;">Homemade Kerala pickles, pressed in small batches and shipped nationwide.</p>
+            <p style="font-size:13px;opacity:0.7;max-width:32ch;">Homemade Kerala pickles, freshly prepared to order and shipped nationwide.</p>
         </div>
         <div>
             <h6 style="margin-bottom:12px;">Shop</h6>
@@ -327,8 +328,10 @@
                 @auth
                     <a href="{{ route('orders.index') }}">Track order</a>
                 @endauth
-                <a href="#">Shipping</a>
-                <a href="#">Returns</a>
+                <a href="{{ route('shipping') }}">Shipping</a>
+                <a href="{{ route('returns') }}">Returns</a>
+                <a href="{{ route('privacy-policy') }}">Privacy Policy</a>
+                <a href="{{ route('terms') }}">Terms &amp; Conditions</a>
             </div>
         </div>
     </div>
