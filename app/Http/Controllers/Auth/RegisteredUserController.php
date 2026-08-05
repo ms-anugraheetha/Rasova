@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,12 +38,27 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        try {
+            $user = User::create([
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
+        } catch (QueryException $e) {
+            // Postgres unique_violation error code. Two simultaneous registrations
+            // with the same email can both pass the pre-insert `unique:` validation
+            // rule (since neither user exists yet at that point), then race to
+            // insert — the DB's unique constraint correctly blocks the second one,
+            // but as a raw QueryException rather than a validation error. Catch it
+            // here and surface it the same way the `unique` rule normally would.
+            if ($e->getCode() === '23505') {
+                throw ValidationException::withMessages([
+                    'email' => ['The email has already been taken.'],
+                ]);
+            }
+            throw $e;
+        }
 
         // Associate any past guest orders placed with this same email —
         // so a returning guest who now creates an account can see their order history.

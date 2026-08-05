@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\ReviewHelpfulVote;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
@@ -21,12 +22,10 @@ class ReviewController extends Controller
             'review' => 'required|string|min:10|max:2000',
             'is_anonymous' => 'nullable|boolean',
         ];
-
         if (! $request->user()) {
             $rules['guest_name'] = 'required|string|max:150';
             $rules['guest_email'] = 'nullable|email|max:255';
         }
-
         $validated = $request->validate($rules);
 
         if ($request->user()) {
@@ -55,7 +54,37 @@ class ReviewController extends Controller
             'approved_by' => null,
             'approved_at' => null,
         ]);
-        $review->save();
+
+        try {
+            $review->save();
+        } catch (QueryException $e) {
+            // Postgres unique_violation on (product_id, user_id). Two
+            // simultaneous submissions from the same logged-in user can both
+            // pass firstOrNew()'s "does a review exist?" check (since neither
+            // has been saved yet at that point) and both try to insert — the
+            // DB's unique constraint correctly blocks the second insert.
+            // Rather than surfacing an error, re-fetch the review the other
+            // request just created and apply this submission's data to it
+            // instead, so the end result still matches the intended
+            // "editing replaces the previous submission" behavior.
+            if ($e->getCode() === '23505' && $request->user()) {
+                $review = Review::where('product_id', $product->id)
+                    ->where('user_id', $request->user()->id)
+                    ->firstOrFail();
+                $review->fill([
+                    'rating' => $validated['rating'],
+                    'review' => $validated['review'],
+                    'is_anonymous' => $request->boolean('is_anonymous'),
+                    'status' => 'pending',
+                    'is_hidden' => false,
+                    'approved_by' => null,
+                    'approved_at' => null,
+                ]);
+                $review->save();
+            } else {
+                throw $e;
+            }
+        }
 
         $product->recalculateAverageRating();
 
